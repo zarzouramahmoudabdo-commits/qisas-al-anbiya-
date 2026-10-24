@@ -1,0 +1,17 @@
+{
+  "name": "qisas-al-anbiya",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/cli": "^6.2.0",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor-community/text-to-speech": "4.0.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  },
+  "scripts": {
+    "build:tts": "esbuild tools/tts-bridge-entry.js --bundle --format=iife --target=es2020 --outfile=www/tts-bridge.js"
+  }
+}

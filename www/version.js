@@ -1,1 +1,1 @@
-const QISAS_VERSION = "1.0.0";
+const QISAS_VERSION = "2026.10.24.1907";

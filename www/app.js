@@ -548,8 +548,6 @@ const views = {
     </div>
     <div class="set">
       <div class="r"><span>إصدار التطبيق<small id="verTxt">${esc(VERSION)}</small></span><button class="btn" data-act="update">🔄 تحقق من التحديث</button></div>
-      <div class="r" id="installRow" hidden><span>تثبيت التطبيق على الشاشة الرئيسية</span><button class="btn" data-act="install">تثبيت</button></div>
-      <div class="r"><span>مشاركة التطبيق</span><button class="btn alt" data-act="share-app">📤 مشاركة</button></div>
     </div>
     <div class="set">
       <div class="r"><span>مسح بيانات القراءة<small>المفضلة وسجل المتابعة</small></span><button class="btn danger" data-act="clear">مسح</button></div>
