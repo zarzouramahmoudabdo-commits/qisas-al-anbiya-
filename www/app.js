@@ -679,7 +679,7 @@ function checkInstallRow() { const r = $('#installRow'); if (r) r.hidden = !defe
 /* ───── التحديث ───── */
 async function checkUpdate(manual) {
   // نسخة Android تستخدم ملفاتها المحلية؛ فحص تحديثات الموقع للويب فقط.
-  if (window.Capacitor?.isNativePlatform?.()) {
+  if (false && window.Capacitor?.isNativePlatform?.()) {
     if (manual) toast('لتحديث التطبيق، ثبّت أحدث نسخة APK');
     return false;
   }
