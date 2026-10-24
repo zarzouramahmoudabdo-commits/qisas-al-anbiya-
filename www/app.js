@@ -689,7 +689,7 @@ async function checkUpdate(manual) {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
     const j = await r.json();
     if (j.version && j.version !== VERSION) {
-      $('#upd').hidden = false;
+      $('#upd').hidden = false; if (!Reader.playing && !sessionStorage.getItem("qa")) { sessionStorage.setItem("qa","1"); setTimeout(applyUpdate, 1500); }
       $('#upd').dataset.ver = j.version;
       if (manual) toast('يوجد تحديث جديد' + (j.notes ? ': ' + j.notes : ''), 4000);
       return true;
