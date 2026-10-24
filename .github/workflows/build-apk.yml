@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths-ignore: ['www/**', '*.md']
+    paths-ignore: ['*.md']
 
 permissions:
   contents: write
@@ -37,11 +37,14 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Point the app at the GitHub Pages site
-        run: node tools/set-url.js "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+      - name: Bundle native text-to-speech bridge
+        run: npm run build:tts
 
       - name: Create Android project
         run: npx cap add android
+
+      - name: Sync native plugins
+        run: npx cap sync android
 
       - name: Generate launcher icons
         run: npx --yes @capacitor/assets generate --android --iconBackgroundColor '#0b5d3b' --iconBackgroundColorDark '#073d27'

@@ -1,7 +1,7 @@
 importScripts('version.js');
 
 const CACHE = 'qisas-' + QISAS_VERSION;
-const CORE = ['./', 'index.html', 'style.css', 'app.js', 'data.js', 'version.js', 'manifest.json', 'icons/icon-192.png', 'icons/icon-512.png'];
+const CORE = ['./', 'index.html', 'style.css', 'app.js', 'tts-bridge.js', 'data.js', 'version.js', 'manifest.json', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(

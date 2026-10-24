@@ -68,33 +68,96 @@ const Reader = {
     return ar.find(v => /ar-SA/i.test(v.lang)) || ar.find(v => /ar-EG/i.test(v.lang)) || ar[0] || null;
   },
   list() { return this.els.filter(e => settings.readExtras || !e.dataset.extra); },
+  nativeTTS() {
+    try {
+      if (window.Capacitor &&
+          typeof window.Capacitor.isNativePlatform === 'function' &&
+          window.Capacitor.isNativePlatform() &&
+          window.QisasNativeTTS) {
+        return window.QisasNativeTTS;
+      }
+    } catch {}
+    return null;
+  },
   mount(els, ctx) { this.stop(); this.els = els; this.ctx = ctx; this.idx = 0; this.ui(); },
   speak(i) {
-    if (!synth) { toast('المتصفح لا يدعم القراءة الصوتية'); return; }
+    const native = this.nativeTTS();
+    if (!native && !synth) { toast('الجهاز لا يدعم القراءة الصوتية'); return; }
+
     const list = this.list();
     if (i >= list.length) return this.finish();
     if (i < 0) i = 0;
+
     this.idx = i;
     const el = list[i];
+    if (!el) return;
     $$('.s.cur').forEach(x => x.classList.remove('cur'));
     el.classList.add('cur');
     el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+
     const my = ++this.token;
-    const u = new SpeechSynthesisUtterance(el.textContent.trim());
+    const text = el.textContent.trim();
+    this.saveProgress(i, list.length);
+    this.ui();
+
+    if (native) {
+      (async () => {
+        try {
+          try { await native.stop(); } catch {}
+          if (my !== this.token || !this.playing) return;
+
+          const opts = {
+            text,
+            lang: 'ar-EG',
+            rate: Number(settings.rate) || 1,
+            pitch: Number(settings.pitch) || 1,
+            volume: 1
+          };
+
+          try {
+            await native.speak(opts);
+          } catch (firstError) {
+            if (my !== this.token || !this.playing) return;
+            await native.speak({ ...opts, lang: 'ar-SA' });
+          }
+
+          if (my === this.token && this.playing) this.speak(i + 1);
+        } catch (error) {
+          if (my !== this.token) return;
+          this.playing = false;
+          this.lockScreen(false);
+          this.ui();
+          console.error('Native TTS error:', error);
+          toast('تعذر تشغيل النطق العربي. تأكد من تثبيت بيانات تحويل النص إلى كلام في إعدادات أندرويد.');
+        }
+      })();
+      return;
+    }
+
+    const u = new SpeechSynthesisUtterance(text);
     const v = this.pickVoice();
     if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'ar-SA';
-    u.rate = settings.rate; u.pitch = settings.pitch;
-    u.onend = () => { if (my === this.token && this.playing) this.speak(i + 1); };
+    u.rate = settings.rate;
+    u.pitch = settings.pitch;
+    u.onend = () => {
+      if (my === this.token && this.playing) this.speak(i + 1);
+    };
     u.onerror = e => {
       if (my !== this.token || !this.playing) return;
       if (e.error === 'interrupted' || e.error === 'canceled') return;
-      if (e.error === 'not-allowed') { this.playing = false; this.ui(); return; }
-      this.speak(i + 1);
+      if (e.error === 'not-allowed') {
+        this.playing = false;
+        this.ui();
+        return;
+      }
+      this.playing = false;
+      this.ui();
+      toast('حدث خطأ في القراءة الصوتية');
     };
     synth.cancel();
-    setTimeout(() => { if (my === this.token) synth.speak(u); }, 40);
-    this.saveProgress(i, list.length);
-    this.ui();
+    setTimeout(() => {
+      if (my === this.token && this.playing) synth.speak(u);
+    }, 40);
   },
   saveProgress(i, total, done) {
     if (!this.ctx) return;
@@ -110,11 +173,23 @@ const Reader = {
     this.speak(this.idx);
     this.mediaSession();
   },
-  pause() { this.playing = false; this.token++; if (synth) synth.cancel(); this.lockScreen(false); this.ui(); },
-  stop() {
-    this.playing = false; this.token++;
+  pause() {
+    this.playing = false;
+    this.token++;
     if (synth) synth.cancel();
-    clearTimeout(this.sleepT); this.lockScreen(false);
+    const native = this.nativeTTS();
+    if (native) Promise.resolve().then(() => native.stop()).catch(() => {});
+    this.lockScreen(false);
+    this.ui();
+  },
+  stop() {
+    this.playing = false;
+    this.token++;
+    if (synth) synth.cancel();
+    const native = this.nativeTTS();
+    if (native) Promise.resolve().then(() => native.stop()).catch(() => {});
+    clearTimeout(this.sleepT);
+    this.lockScreen(false);
   },
   toggle() { this.playing ? this.pause() : this.play(); },
   next() { const n = Math.min(this.idx + 1, this.list().length - 1); this.playing ? this.speak(n) : this.moveTo(n); },
@@ -144,11 +219,39 @@ const Reader = {
     } else toast('انتهت القراءة ✓');
   },
   speakOnce(text) {
-    if (!synth) return toast('المتصفح لا يدعم القراءة الصوتية');
+    const native = this.nativeTTS();
     this.stop();
-    const u = new SpeechSynthesisUtterance(text);
-    const v = this.pickVoice(); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'ar-SA';
-    u.rate = settings.rate; u.pitch = settings.pitch;
+
+    if (native) {
+      (async () => {
+        const opts = {
+          text: String(text),
+          lang: 'ar-EG',
+          rate: Number(settings.rate) || 1,
+          pitch: Number(settings.pitch) || 1,
+          volume: 1
+        };
+        try {
+          try { await native.stop(); } catch {}
+          try {
+            await native.speak(opts);
+          } catch (firstError) {
+            await native.speak({ ...opts, lang: 'ar-SA' });
+          }
+        } catch (error) {
+          console.error('Native TTS error:', error);
+          toast('تعذر تشغيل النطق العربي');
+        }
+      })();
+      return;
+    }
+
+    if (!synth) return toast('الجهاز لا يدعم القراءة الصوتية');
+    const u = new SpeechSynthesisUtterance(String(text));
+    const v = this.pickVoice();
+    if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'ar-SA';
+    u.rate = settings.rate;
+    u.pitch = settings.pitch;
     synth.speak(u);
   },
   setSleep(min) {
@@ -246,11 +349,34 @@ function showPlayer(item) {
 }
 function hidePlayer() { const p = $('#player'); p.hidden = true; p.innerHTML = ''; document.body.classList.remove('has-player'); }
 
+function normalizeDua(d) {
+  if (typeof d === 'string') return { text: d, ref: '' };
+  if (d && typeof d === 'object') return d;
+  return null;
+}
+
 function allDuas() {
   const out = [];
-  (D.duas || []).forEach((d, i) => out.push({ key: 'd:g:' + i, text: d.text, ref: d.ref, from: 'أدعية عامة' }));
+  (D.duas || []).forEach((raw, i) => {
+    const d = normalizeDua(raw);
+    if (d && typeof d.text === 'string' && d.text.trim()) {
+      out.push({ key: 'd:g:' + i, title: d.title || 'دعاء', text: d.text, ref: d.ref || '', from: 'أدعية عامة' });
+    }
+  });
   ['seerah', 'prophets'].forEach(kind => (D[kind] || []).forEach(it =>
-    (it.duas || []).forEach((d, i) => out.push({ key: `d:${kind}:${it.id}:${i}`, text: d.text, ref: d.ref, from: it.short || it.title }))));
+    (it.duas || []).forEach((raw, i) => {
+      const d = normalizeDua(raw);
+      if (d && typeof d.text === 'string' && d.text.trim()) {
+        out.push({
+          key: `d:${kind}:${it.id}:${i}`,
+          title: d.title || ('دعاء من ' + (it.short || it.title)),
+          text: d.text,
+          ref: d.ref || '',
+          from: it.short || it.title
+        });
+      }
+    })
+  ));
   return out;
 }
 
@@ -312,7 +438,8 @@ const views = {
     const prev = items[i - 1], next = items[i + 1];
     const verses = (it.verses || []).length ? `<div class="chips">${it.verses.map(v => `<span class="chip">📌 ${esc(v)}</span>`).join('')}</div>` : '';
     const lessons = (it.lessons || []).length ? `<section class="box"><h2>💡 الدروس والعبر</h2><ul>${it.lessons.map(l => `<li><span class="s" data-extra="1">${esc(l)} </span></li>`).join('')}</ul></section>` : '';
-    const duas = (it.duas || []).length ? `<section class="box"><h2>🤲 الدعاء</h2>${it.duas.map(d => `<div class="dua"><span class="s" data-extra="1">${esc(d.text)} </span></div><div class="ref">${esc(d.ref || '')}</div>`).join('')}</section>` : '';
+    const duaCards = (it.duas || []).map(normalizeDua).filter(d => d && typeof d.text === 'string' && d.text.trim());
+    const duas = duaCards.length ? `<section class="box"><h2>🤲 الدعاء</h2>${duaCards.map(d => `<div class="dua"><strong>${esc(d.title || "دعاء")}</strong><br><span class="s" data-extra="1">${esc(d.text)} </span></div>${d.ref ? `<div class="ref">${esc(d.ref)}</div>` : ''}`).join('')}</section>` : '';
     const srcs = (it.sources || []).length ? `<ul>${it.sources.map(s => `<li>${esc(s)}</li>`).join('')}</ul>` : `<div class="empty">لم تُضَف مصادر لهذه القصة بعد.</div>`;
     return `
     <article>
@@ -351,6 +478,7 @@ const views = {
     } else if (tab === 'duas') {
       body = allDuas().map(d => `
         <div class="dua-card">
+          <strong>${esc(d.title || "دعاء")}</strong>
           <div class="dua">${esc(d.text)}</div>
           <div class="ref">${esc(d.ref || '')} • ${esc(d.from)}</div>
           <div class="row">
@@ -380,7 +508,7 @@ const views = {
       const it = findItem(a, b);
       if (it) rows.push(`<a class="item" href="#/item/${a}/${b}"><div class="no">${it.icon || '📖'}</div><div><h3>${esc(it.title)}</h3><p>${SEC[a].title}</p></div><span class="heart">♥</span></a>`);
     });
-    const duas = allDuas().filter(d => isFav(d.key)).map(d => `<div class="dua-card"><div class="dua">${esc(d.text)}</div><div class="ref">${esc(d.ref || '')}</div><div class="row"><button class="chipbtn" data-act="speak" data-text="${esc(d.text)}">🔊 استمع</button><button class="chipbtn on" data-act="fav" data-key="${esc(d.key)}">♥</button></div></div>`).join('');
+    const duas = allDuas().filter(d => isFav(d.key)).map(d => `<div class="dua-card"><strong>${esc(d.title || "دعاء")}</strong><div class="dua">${esc(d.text)}</div><div class="ref">${esc(d.ref || '')}</div><div class="row"><button class="chipbtn" data-act="speak" data-text="${esc(d.text)}">🔊 استمع</button><button class="chipbtn on" data-act="fav" data-key="${esc(d.key)}">♥</button></div></div>`).join('');
     const empty = !rows.length && !duas;
     return `<h2 class="page-title">♥ المفضلة</h2>
       ${empty ? `<div class="empty">لا توجد عناصر في المفضلة بعد.<br>اضغط ♡ داخل أي قصة أو دعاء لحفظه هنا.</div>` : ''}
@@ -403,7 +531,7 @@ const views = {
           hits.push(`<a class="item" href="#/item/${kind}/${it.id}"><div class="no">${it.icon || '📖'}</div><div><h3>${esc(it.title)}</h3><p>${esc(snip)}</p></div></a>`);
         }
       }));
-      const dh = allDuas().filter(d => norm(d.text + ' ' + d.ref).includes(nq)).map(d => `<div class="dua-card"><div class="dua">${esc(d.text)}</div><div class="ref">${esc(d.ref)}</div></div>`);
+      const dh = allDuas().filter(d => norm(d.text + ' ' + d.ref).includes(nq)).map(d => `<div class="dua-card"><strong>${esc(d.title || "دعاء")}</strong><div class="dua">${esc(d.text)}</div><div class="ref">${esc(d.ref)}</div></div>`);
       res = hits.length || dh.length ? `<div class="list">${hits.join('')}</div>${dh.length ? `<div class="group-t">أدعية</div>${dh.join('')}` : ''}` : `<div class="empty">لا نتائج لـ «${esc(q)}»</div>`;
     } else res = `<div class="empty">اكتب كلمتين على الأقل للبحث.</div>`;
     return `<h2 class="page-title">🔍 البحث</h2>
@@ -552,6 +680,11 @@ function checkInstallRow() { const r = $('#installRow'); if (r) r.hidden = !defe
 
 /* ───── التحديث ───── */
 async function checkUpdate(manual) {
+  // نسخة Android تستخدم ملفاتها المحلية؛ فحص تحديثات الموقع للويب فقط.
+  if (window.Capacitor?.isNativePlatform?.()) {
+    if (manual) toast('لتحديث التطبيق، ثبّت أحدث نسخة APK');
+    return false;
+  }
   const btns = $$('[data-act="update"]');
   if (manual) btns.forEach(b => b.classList.add('spin'));
   try {
@@ -582,7 +715,7 @@ async function applyUpdate() {
 window.addEventListener('hashchange', route);
 route();
 
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && !window.Capacitor?.isNativePlatform?.()) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
 setTimeout(() => checkUpdate(false), 2500);
