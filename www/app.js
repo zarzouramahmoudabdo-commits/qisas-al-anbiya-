@@ -560,6 +560,10 @@ const views = {
 const TOP = ['', '#/', '#/seerah', '#/prophets', '#/lessons', '#/favs'];
 function route() {
   const h = location.hash || '#/';
+
+  // الأقسام الإضافية تتولى عرضها extra.js
+  if (/^#\/x(?:\/|$)/.test(h)) return;
+
   const parts = h.replace(/^#\/?/, '').split('/');
   const [p0, p1, p2, p3] = parts;
   const app = $('#app');
@@ -719,4 +723,20 @@ if ('serviceWorker' in navigator && !window.Capacitor?.isNativePlatform?.()) {
 setTimeout(() => checkUpdate(false), 2500);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUpdate(false); });
 setInterval(() => checkUpdate(false), 30 * 60 * 1000);
+})();
+
+/*QISAS-EXTRA*/
+;(function(){
+  try {
+    var l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = 'extra.css';
+    document.head.appendChild(l);
+
+    var s = document.createElement('script');
+    s.src = 'extra.js';
+    document.body.appendChild(s);
+  } catch(e) {
+    console.error('QISAS-EXTRA:', e);
+  }
 })();
