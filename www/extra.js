@@ -328,7 +328,7 @@ function injectCards() {
   CARDS.forEach(c => {
     const a = document.createElement('a'); a.className = 'sec-card'; a.href = c[0]; a.setAttribute('data-xcard', '1');
     a.innerHTML = `<div class="big">${c[1]}</div><div><h3>${esc(c[2])}</h3><p>${esc(c[3])}</p></div><span class="arr">›</span>`;
-    box.insertBefore(a, last);
+    box.insertBefore(a, box.querySelector('a[href="#/settings"]') || last);
   });
 }
 function watch() {
@@ -347,3 +347,6 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 /* تحديث الـ APK من داخل التطبيق (يعمل في تطبيق أندرويد فقط) */
 (() => { try { var s = document.createElement('script'); s.src = 'apk-update.js'; document.head.appendChild(s); } catch (e) {} })();
+
+/* المظهر */
+(() => { try { var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'theme.css'; document.head.appendChild(l); var s = document.createElement('script'); s.src = 'theme.js'; document.head.appendChild(s); } catch (e) {} })();

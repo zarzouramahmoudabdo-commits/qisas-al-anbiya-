@@ -3,11 +3,13 @@
 (() => {
 'use strict';
 const C = window.Capacitor;
-let native = false, P = null, perr = '';
-try { native = !!(C && ((C.isNativePlatform && C.isNativePlatform()) || (C.getPlatform && C.getPlatform() !== 'web'))); } catch (e) {}
-try { if (C && C.registerPlugin) P = C.registerPlugin('ApkInstaller'); } catch (e) { perr = String(e && e.message || e); }
+if (!(C && C.isNativePlatform && C.isNativePlatform())) return;
+let P; try { P = C.registerPlugin('ApkInstaller'); } catch (e) { return; }
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-let info = null, latest = null, busy = false;
+let info = null, latest = null, busy = false, hasNew = false;
+const FLAG = 'x_apk_new';
+function flag(n) { try { n ? localStorage.setItem(FLAG, String(n)) : localStorage.removeItem(FLAG); } catch (e) {} hasNew = !!n; paint(); }
+function paint() { const c = document.querySelector('[data-apkcard]'); if (c) c.classList.toggle('has-update', hasNew); }
 
 function modal(html) {
   let m = document.getElementById('x-apkm');
@@ -65,20 +67,13 @@ async function start() {
   busy = false;
 }
 
-async function diag() {
-  let ab = '—'; try { ab = JSON.stringify(await load()); } catch (e) { ab = 'خطأ: ' + e; }
-  let ci = '—'; try { ci = P ? JSON.stringify(await P.canInstall()) : 'لا يوجد مكوّن'; } catch (e) { ci = 'خطأ: ' + (e && e.message || e); }
-  modal(`<b>معلومات التشخيص</b><div dir="ltr" style="text-align:left;font:12px/1.7 monospace;word-break:break-all">native: ${native}<br>Capacitor: ${!!C} ${C && C.getPlatform ? C.getPlatform() : ''}<br>plugin: ${!!P} ${esc(perr)}<br>apk-build: ${esc(ab)}<br>canInstall: ${esc(ci)}</div>${btn('xa-x', 'إغلاق', 1)}`);
-  document.getElementById('xa-x').onclick = close;
-}
 async function check(manual) {
-  if (manual && (!native || !P)) return diag();
-  if (!native || !P) return;
   try {
     if (!navigator.onLine) { if (manual) modal(`لا يوجد اتصال بالإنترنت.${btn('xa-x', 'إغلاق', 1)}`), document.getElementById('xa-x').onclick = close; return; }
     const i = await load();
     if (!i) { if (manual) { modal(`هذه النسخة لا تدعم التحديث الداخلي.${btn('xa-x', 'إغلاق', 1)}`); document.getElementById('xa-x').onclick = close; } return; }
     latest = await fetchLatest();
+    flag(latest.n > i.n ? latest.n : 0);
     if (latest.n > i.n) {
       const mb = latest.size ? ' (' + (latest.size / 1048576).toFixed(1) + ' MB)' : '';
       modal(`<b>يوجد إصدار جديد من التطبيق</b>${mb}<br>سيُنزَّل ويُثبَّت فوق النسخة الحالية.<br>${btn('xa-go', 'تنزيل وتثبيت')}${btn('xa-no', 'لاحقًا', 1)}`);
@@ -99,12 +94,11 @@ function card() {
   if (!box || box.querySelector('[data-apkcard]')) return;
   const a = document.createElement('a'); a.className = 'sec-card gold'; a.href = '#'; a.setAttribute('data-apkcard', '1');
   a.innerHTML = '<div class="big">⬇️</div><div><h3>تحديث التطبيق (APK)</h3><p>تنزيل آخر إصدار من التطبيق وتثبيته من داخل التطبيق</p></div><span class="arr">›</span>';
+  paint();
   a.onclick = ev => { ev.preventDefault(); check(true); };
-  let t; a.addEventListener('touchstart', () => { t = setTimeout(diag, 1200); }, { passive: true });
-  a.addEventListener('touchend', () => clearTimeout(t), { passive: true });
-  box.insertBefore(a, box.lastElementChild);
+  box.appendChild(a); paint();
 }
 const app = document.getElementById('app');
 if (app) { new MutationObserver(card).observe(app, { childList: true }); card(); }
-if (native && P) setTimeout(() => check(false), 6000);
+setTimeout(() => check(false), 6000);
 })();
