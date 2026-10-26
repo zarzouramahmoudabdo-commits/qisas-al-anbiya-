@@ -3,8 +3,9 @@
 (() => {
 'use strict';
 const C = window.Capacitor;
-if (!(C && C.isNativePlatform && C.isNativePlatform())) return;
-let P; try { P = C.registerPlugin('ApkInstaller'); } catch (e) { return; }
+let native = false, P = null, perr = '';
+try { native = !!(C && ((C.isNativePlatform && C.isNativePlatform()) || (C.getPlatform && C.getPlatform() !== 'web'))); } catch (e) {}
+try { if (C && C.registerPlugin) P = C.registerPlugin('ApkInstaller'); } catch (e) { perr = String(e && e.message || e); }
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let info = null, latest = null, busy = false;
 
@@ -64,7 +65,15 @@ async function start() {
   busy = false;
 }
 
+async function diag() {
+  let ab = '—'; try { ab = JSON.stringify(await load()); } catch (e) { ab = 'خطأ: ' + e; }
+  let ci = '—'; try { ci = P ? JSON.stringify(await P.canInstall()) : 'لا يوجد مكوّن'; } catch (e) { ci = 'خطأ: ' + (e && e.message || e); }
+  modal(`<b>معلومات التشخيص</b><div dir="ltr" style="text-align:left;font:12px/1.7 monospace;word-break:break-all">native: ${native}<br>Capacitor: ${!!C} ${C && C.getPlatform ? C.getPlatform() : ''}<br>plugin: ${!!P} ${esc(perr)}<br>apk-build: ${esc(ab)}<br>canInstall: ${esc(ci)}</div>${btn('xa-x', 'إغلاق', 1)}`);
+  document.getElementById('xa-x').onclick = close;
+}
 async function check(manual) {
+  if (manual && (!native || !P)) return diag();
+  if (!native || !P) return;
   try {
     if (!navigator.onLine) { if (manual) modal(`لا يوجد اتصال بالإنترنت.${btn('xa-x', 'إغلاق', 1)}`), document.getElementById('xa-x').onclick = close; return; }
     const i = await load();
@@ -91,9 +100,11 @@ function card() {
   const a = document.createElement('a'); a.className = 'sec-card gold'; a.href = '#'; a.setAttribute('data-apkcard', '1');
   a.innerHTML = '<div class="big">⬇️</div><div><h3>تحديث التطبيق (APK)</h3><p>تنزيل آخر إصدار من التطبيق وتثبيته من داخل التطبيق</p></div><span class="arr">›</span>';
   a.onclick = ev => { ev.preventDefault(); check(true); };
+  let t; a.addEventListener('touchstart', () => { t = setTimeout(diag, 1200); }, { passive: true });
+  a.addEventListener('touchend', () => clearTimeout(t), { passive: true });
   box.insertBefore(a, box.lastElementChild);
 }
 const app = document.getElementById('app');
 if (app) { new MutationObserver(card).observe(app, { childList: true }); card(); }
-setTimeout(() => check(false), 6000);
+if (native && P) setTimeout(() => check(false), 6000);
 })();

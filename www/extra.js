@@ -346,4 +346,4 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 })();
 
 /* تحديث الـ APK من داخل التطبيق (يعمل في تطبيق أندرويد فقط) */
-(() => { try { if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) (function () { var s = document.createElement('script'); s.src = 'apk-update.js'; document.head.appendChild(s); })(); } catch (e) {} })();
+(() => { try { var s = document.createElement('script'); s.src = 'apk-update.js'; document.head.appendChild(s); } catch (e) {} })();
