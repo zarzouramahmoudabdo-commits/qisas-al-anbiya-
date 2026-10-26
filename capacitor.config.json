@@ -3,9 +3,7 @@
   "appName": "قصص الأنبياء",
   "webDir": "www",
   "server": {
-    "url": "https://zarzouramahmoudabdo-commits.github.io/qisas-al-anbiya-/",
-    "androidScheme": "https",
-    "errorPath": "offline.html"
+    "androidScheme": "https"
   },
   "android": {
     "backgroundColor": "#0b5d3b"

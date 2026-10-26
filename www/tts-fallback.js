@@ -1,7 +1,7 @@
 /* صوت بديل v2 (مع تشخيص على الشاشة). يلفّ window.QisasNativeTTS دون تغيير app.js */
 (() => {
   'use strict';
-  const DEBUG = true;
+  const DEBUG = false;
   const lines = [];
   let box = null, hideT = null;
   function note(msg) {

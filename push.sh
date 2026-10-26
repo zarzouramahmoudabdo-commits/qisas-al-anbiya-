@@ -7,6 +7,7 @@ V="$(date +%Y.%m.%d.%H%M)"
 SAFE_MSG="${MSG//\\/}"; SAFE_MSG="${SAFE_MSG//\"/}"
 echo "const QISAS_VERSION = \"$V\";" > www/version.js
 printf '{"version":"%s","notes":"%s"}\n' "$V" "$SAFE_MSG" > www/version.json
+node tools/make-manifest.js
 git add -A
 git commit -m "$MSG ($V)" || echo "لا توجد تغييرات جديدة"
 git push

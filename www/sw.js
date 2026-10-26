@@ -1,7 +1,39 @@
-/* Service worker: الملفات جوه الـ APK (تشتغل أوفلاين من أول فتح) + تحديث تلقائي من الموقع. */
+/* Service worker: الملفات جوه الـ APK (تشتغل أوفلاين من أول فتح) + تحديث تلقائي من الموقع.
+   - ملف موجود في الكاش: يُعرض فورًا ويتحدّث في الخلفية من الموقع.
+   - ملف مش في الكاش: يُجلب من الموقع (مهلة 3 ثواني)، وإن فشل يُستخدم الملف الموجود جوه الـ APK.
+   - version.json: من الموقع فقط (لو مفيش نت يفشل بهدوء). */
 const REMOTE = 'https://zarzouramahmoudabdo-commits.github.io/qisas-al-anbiya-/';
 const CACHE = 'qisas-live-v1';
 const TIMEOUT = 3000;
+
+/* تنزيل كل ملفات الموقع في الخلفية (مرة واحدة، ثم الملفات المتغيّرة فقط) ليعمل كل شيء بدون إنترنت */
+let busy = false;
+async function precache() {
+  if (busy) return; busy = true;
+  try {
+    const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 8000);
+    const m = await fetch(REMOTE + 'precache.json?' + Date.now(), { cache: 'no-store', signal: ctl.signal })
+      .then(r => (r.ok ? r.json() : null)).finally(() => clearTimeout(tm));
+    if (!m || !m.files) return;
+    const cache = await caches.open(CACHE);
+    const mk = new URL('__manifest', self.registration.scope).href;
+    const oldR = await cache.match(mk);
+    const old = oldR ? await oldR.json() : { files: {} };
+    const done = Object.assign({}, old.files);
+    Object.keys(done).forEach(p => { if (!m.files[p]) delete done[p]; });
+    const todo = Object.keys(m.files).filter(p => done[p] !== m.files[p]);
+    for (let i = 0; i < todo.length; i += 4) {
+      await Promise.all(todo.slice(i, i + 4).map(async p => {
+        try {
+          const r = await fetch(REMOTE + p, { cache: 'reload' });
+          if (r.ok) { await cache.put(new URL(p, self.registration.scope).href, r); done[p] = m.files[p]; }
+        } catch (e) {}
+      }));
+    }
+    await cache.put(mk, new Response(JSON.stringify({ files: done })));
+  } catch (e) {} finally { busy = false; }
+}
+self.addEventListener('message', e => { if (e.data === 'precache') e.waitUntil(precache()); });
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => {
@@ -34,13 +66,13 @@ async function handle(e, req, url) {
     return r;
   });
   if (hit) {
-    e.waitUntil(refresh().catch(() => {}));
+    if (!url.pathname.includes('/hadith/')) e.waitUntil(refresh().catch(() => {}));
     return hit;
   }
   try {
     const r = await refresh();
     if (r && r.ok) return r;
-  } catch (err) { }
+  } catch (err) { /* نكمل للنسخة الداخلية */ }
   return fetch(req);
 }
 
@@ -63,7 +95,7 @@ self.addEventListener('fetch', e => {
     if (/(^|\.)(fonts\.googleapis\.com|fonts\.gstatic\.com)$/.test(url.hostname)) e.respondWith(fonts(req));
     return;
   }
-  if (req.mode === 'navigate') return;
+  if (req.mode === 'navigate') return;               // index.html يُقدَّم من الـ APK كما هو
   if (url.pathname.endsWith('/sw.js')) return;
 
   if (url.pathname.endsWith('/version.json')) {

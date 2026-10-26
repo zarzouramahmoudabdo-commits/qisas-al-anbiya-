@@ -14,7 +14,7 @@ const OUT = path.join(__dirname, '..', 'www', 'hadith');
 
 const BOOKS = [
   { id: 'bukhari', match: /(^|\/)bukhari\.json$/i, title: 'صحيح البخاري', short: 'البخاري', author: 'الإمام محمد بن إسماعيل البخاري (ت 256هـ)', min: 5000, note: 'الأحاديث بتكرارها كما في الكتاب' },
-  { id: 'muslim', match: /(^|\/)muslim\.json$/i, title: 'صحيح مسلم', short: 'مسلم', author: 'الإمام مسلم بن الحجاج (ت 261هـ)', min: 3000, note: '' },
+  { id: 'muslim', match: /(^|\/)muslim\.json$/i, title: 'صحيح مسلم', short: 'مسلم', author: 'الإمام مسلم بن الحجاج (ت 261هـ)', min: 5000, note: '' },
   { id: 'nawawi40', match: /(^|\/)nawawi40\.json$/i, title: 'الأربعون النووية', short: 'الأربعون', author: 'الإمام يحيى بن شرف النووي (ت 676هـ)', min: 35, note: 'اثنان وأربعون حديثًا' },
   { id: 'riyad', match: /(^|\/)riyad[_-]?assalihin\.json$/i, title: 'رياض الصالحين', short: 'الرياض', author: 'الإمام يحيى بن شرف النووي (ت 676هـ)', min: 1500, note: 'فيه أحاديث متفاوتة الدرجة؛ راجع تخريج العلماء' }
 ];

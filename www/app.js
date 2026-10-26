@@ -717,7 +717,7 @@ async function applyUpdate() {
 window.addEventListener('hashchange', route);
 route();
 
-if ('serviceWorker' in navigator && !window.Capacitor?.isNativePlatform?.()) {
+if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
 setTimeout(() => checkUpdate(false), 2500);

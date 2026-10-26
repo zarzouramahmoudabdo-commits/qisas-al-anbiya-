@@ -321,3 +321,9 @@ function watch() {
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(watch, 100)); else setTimeout(watch, 100);
 })();
+
+/* طلب تنزيل الملفات للعمل بدون إنترنت */
+(() => {
+  const pre = () => { try { navigator.serviceWorker && navigator.serviceWorker.ready.then(r => r.active && r.active.postMessage('precache')); } catch (e) {} };
+  window.addEventListener('online', pre); setTimeout(pre, 4000);
+})();
