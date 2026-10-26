@@ -198,7 +198,7 @@ function hadithCard(h, b, hl) {
   return `<div class="x-hd"><div class="t">${txt}</div><div class="m"><span class="no">${esc(b.short || b.title)} · ${esc(n)}</span>
     <button class="x-btn sm alt" data-x="hlisten" data-b="${esc(b.id)}" data-n="${esc(n)}">🔊</button>
     <button class="x-btn sm alt" data-x="hcopy" data-b="${esc(b.id)}" data-n="${esc(n)}">نسخ</button>
-    <button class="x-btn sm alt" data-x="hfav" data-b="${esc(b.id)}" data-n="${esc(n)}">${on ? '♥' : '♡'}</button></div></div>`;
+    <button class="x-btn sm alt" data-x="hfav" data-b="${esc(b.id)}" data-n="${esc(n)}">${on ? '♥' : '♡'}</button>${b.id === 'nawawi40' ? `<button class="x-btn sm" data-x="sharh" data-n="${esc(n)}">📖 الشرح</button>` : ''}</div><div class="x-sharh" hidden></div></div>`;
 }
 async function viewHadith(parts) {
   let idx;
@@ -267,6 +267,22 @@ async function go() {
 }
 window.addEventListener('hashchange', () => setTimeout(go, 0));
 
+/* ───── شرح الأربعين ───── */
+async function toggleSharh(el) {
+  const card = el.closest('.x-hd'), box = card.querySelector('.x-sharh');
+  if (!box.hidden) { box.hidden = true; return; }
+  try { if (!window.QISAS_SHARH) await loadScript('data-sharh-nawawi.js'); } catch (e) { box.innerHTML = '<p>تعذّر تحميل الشرح.</p>'; box.hidden = false; return; }
+  const text = strip(card.querySelector('.t').textContent), n = parseInt(el.dataset.n, 10);
+  const S = window.QISAS_SHARH;
+  let e = S[n - 1] && text.includes(strip(S[n - 1].k)) ? S[n - 1] : S.find(x => text.includes(strip(x.k)));
+  if (!e) { box.innerHTML = '<p>لا يتوفر شرح لهذا الحديث.</p>'; box.hidden = false; return; }
+  curText = e.t + '. ' + e.s.replace(/\n+/g, ' ');
+  box.innerHTML = `<h3>${esc(e.t)}</h3>${paras(e.s)}<h3>من الفوائد</h3><ul>${(e.f || []).map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+    <div class="x-bar"><button class="x-btn sm" data-x="listen">🔊 استمع</button></div>
+    <div class="x-src">الشرح ملخص بتصرّف من شروح العلماء (ابن رجب، ابن دقيق العيد، النووي)، وليس نصًّا حرفيًّا؛ راجع الشروح المطبوعة للاستشهاد.</div>`;
+  box.hidden = false;
+}
+
 /* ───── الأحداث ───── */
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-x]'); if (!el) return;
@@ -289,6 +305,7 @@ document.addEventListener('click', e => {
     else { f.push({ k, n: h[0], s: b.short || b.title, t: h[1] }); el.textContent = '♥'; toast('أُضيف إلى المفضلة'); }
     ls.set('x_hfav', f);
   }
+  else if (a === 'sharh') { toggleSharh(el); }
   else if (a === 'hunfav') { ls.set('x_hfav', favs().filter(x => x.k !== el.dataset.k)); go(); }
 });
 document.addEventListener('submit', e => {

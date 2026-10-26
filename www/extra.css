@@ -54,3 +54,7 @@
 .x-pg{display:flex;justify-content:space-between;gap:8px;margin:16px 0}
 .x-pg a{flex:1;text-align:center;padding:10px;border-radius:12px;background:var(--card);border:1px solid var(--line);color:var(--ink);text-decoration:none;font-size:.82em}
 mark.x-m{background:var(--hl);color:inherit;border-radius:3px}
+
+.x-sharh{margin-top:10px;border-top:1px dashed var(--line);padding-top:6px}
+.x-sharh p{font-size:.95em;line-height:2.1;margin:.4em 0}
+.x-sharh ul{margin:4px 0;padding-inline-start:20px;font-size:.88em;line-height:2}
