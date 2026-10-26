@@ -344,3 +344,6 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
   const pre = () => { try { navigator.serviceWorker && navigator.serviceWorker.ready.then(r => r.active && r.active.postMessage('precache')); } catch (e) {} };
   window.addEventListener('online', pre); setTimeout(pre, 4000);
 })();
+
+/* تحديث الـ APK من داخل التطبيق (يعمل في تطبيق أندرويد فقط) */
+(() => { try { if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) loadScript('apk-update.js').catch(() => {}); } catch (e) {} })();

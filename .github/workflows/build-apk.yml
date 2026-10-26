@@ -40,9 +40,16 @@ jobs:
       - name: Bundle native text-to-speech bridge
         run: npm run build:tts
 
+      - name: APK build info
+        run: echo '{"n":${{ github.run_number }},"repo":"${{ github.repository }}","tag":"qisas-latest"}' > www/apk-build.json
       - name: Create Android project
         run: npx cap add android
 
+      - name: Android signing + installer plugin
+        env:
+          KS_B64: ${{ secrets.KS_B64 }}
+          KS_PASS: ${{ secrets.KS_PASS }}
+        run: python3 tools/android-patch.py
       - name: Sync native plugins
         run: npx cap sync android
 
@@ -68,5 +75,5 @@ jobs:
         with:
           tag_name: qisas-latest
           name: قصص الأنبياء — أحدث نسخة APK
-          body: حمّل الملف Qisas-Al-Anbiya.apk وثبّته على جهازك الأندرويد.
+          body: build ${{ github.run_number }}
           files: Qisas-Al-Anbiya.apk
