@@ -198,7 +198,7 @@ function hadithCard(h, b, hl) {
   return `<div class="x-hd"><div class="t">${txt}</div><div class="m"><span class="no">${esc(b.short || b.title)} · ${esc(n)}</span>
     <button class="x-btn sm alt" data-x="hlisten" data-b="${esc(b.id)}" data-n="${esc(n)}">🔊</button>
     <button class="x-btn sm alt" data-x="hcopy" data-b="${esc(b.id)}" data-n="${esc(n)}">نسخ</button>
-    <button class="x-btn sm alt" data-x="hfav" data-b="${esc(b.id)}" data-n="${esc(n)}">${on ? '♥' : '♡'}</button>${b.id === 'nawawi40' ? `<button class="x-btn sm" data-x="sharh" data-n="${esc(n)}">📖 الشرح</button>` : ''}</div><div class="x-sharh" hidden></div></div>`;
+    <button class="x-btn sm alt" data-x="hfav" data-b="${esc(b.id)}" data-n="${esc(n)}">${on ? '♥' : '♡'}</button><button class="x-btn sm" data-x="sharh" data-n="${esc(n)}">📖 الشرح</button></div><div class="x-sharh" hidden></div></div>`;
 }
 async function viewHadith(parts) {
   let idx;
@@ -271,15 +271,22 @@ window.addEventListener('hashchange', () => setTimeout(go, 0));
 async function toggleSharh(el) {
   const card = el.closest('.x-hd'), box = card.querySelector('.x-sharh');
   if (!box.hidden) { box.hidden = true; return; }
-  try { if (!window.QISAS_SHARH) await loadScript('data-sharh-nawawi.js'); } catch (e) { box.innerHTML = '<p>تعذّر تحميل الشرح.</p>'; box.hidden = false; return; }
-  const text = strip(card.querySelector('.t').textContent), n = parseInt(el.dataset.n, 10);
-  const S = window.QISAS_SHARH;
-  let e = S[n - 1] && text.includes(strip(S[n - 1].k)) ? S[n - 1] : S.find(x => text.includes(strip(x.k)));
-  if (!e) { box.innerHTML = '<p>لا يتوفر شرح لهذا الحديث.</p>'; box.hidden = false; return; }
+  try {
+    if (!window.QISAS_SHARH) await loadScript('data-sharh-nawawi.js');
+    if (!window.QISAS_SHARH2) await loadScript('data-sharh-famous.js');
+  } catch (e) {}
+  const raw = card.querySelector('.t').textContent, text = strip(raw), n = parseInt(el.dataset.n, 10);
+  const S = window.QISAS_SHARH || [], S2 = window.QISAS_SHARH2 || [];
+  const isN = hCtx && hCtx.b && hCtx.b.id === 'nawawi40';
+  let e = isN && S[n - 1] && text.includes(strip(S[n - 1].k)) ? S[n - 1] : null;
+  if (!e) e = S.find(x => text.includes(strip(x.k))) || S2.find(x => text.includes(strip(x.k)));
+  const q = text.split(/\s+/).filter(Boolean).slice(0, 10).join(' ');
+  const link = `<div class="x-bar"><a class="x-btn sm alt" target="_blank" rel="noopener" href="https://dorar.net/hadith/search?q=${encodeURIComponent(q)}">🌐 الشرح والدرجة (الدرر السنية) — يحتاج إنترنت</a></div>`;
+  if (!e) { box.innerHTML = `<p>لا يوجد شرح مضمَّن لهذا الحديث بعد. يمكنك الاطلاع على شرحه ودرجته وتخريجه من الدرر السنية:</p>${link}`; box.hidden = false; return; }
   curText = e.t + '. ' + e.s.replace(/\n+/g, ' ');
-  box.innerHTML = `<h3>${esc(e.t)}</h3>${paras(e.s)}<h3>من الفوائد</h3><ul>${(e.f || []).map(x => `<li>${esc(x)}</li>`).join('')}</ul>
-    <div class="x-bar"><button class="x-btn sm" data-x="listen">🔊 استمع</button></div>
-    <div class="x-src">الشرح ملخص بتصرّف من شروح العلماء (ابن رجب، ابن دقيق العيد، النووي)، وليس نصًّا حرفيًّا؛ راجع الشروح المطبوعة للاستشهاد.</div>`;
+  box.innerHTML = `<h3>${esc(e.t)}</h3>${paras(e.s)}${(e.f || []).length ? `<h3>من الفوائد</h3><ul>${e.f.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    <div class="x-bar"><button class="x-btn sm" data-x="listen">🔊 استمع</button></div>${link}
+    <div class="x-src">الشرح ملخص بتصرّف من شروح العلماء (ابن رجب، ابن دقيق العيد، النووي، ابن حجر)، وليس نصًّا حرفيًّا؛ راجع الشروح المطبوعة للاستشهاد.</div>`;
   box.hidden = false;
 }
 
