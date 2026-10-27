@@ -74,7 +74,7 @@ async function check(manual) {
     if (!i) { if (manual) { modal(`هذه النسخة لا تدعم التحديث الداخلي.${btn('xa-x', 'إغلاق', 1)}`); document.getElementById('xa-x').onclick = close; } return; }
     latest = await fetchLatest();
     flag(latest.n > i.n ? latest.n : 0);
-    if (latest.n > i.n) {
+    if (latest.n > i.n && manual) {
       const mb = latest.size ? ' (' + (latest.size / 1048576).toFixed(1) + ' MB)' : '';
       modal(`<b>يوجد إصدار جديد من التطبيق</b>${mb}<br>سيُنزَّل ويُثبَّت فوق النسخة الحالية.<br>${btn('xa-go', 'تنزيل وتثبيت')}${btn('xa-no', 'لاحقًا', 1)}`);
       document.getElementById('xa-no').onclick = close;
@@ -88,17 +88,18 @@ async function check(manual) {
 }
 window.__qisasApkCheck = check;
 
-/* بطاقة في الرئيسية + فحص تلقائي بعد الفتح */
+/* بطاقة تحديث التطبيق في الرئيسية: نقطة حمراء عند وجود إصدار جديد، والضغط عليها ينزّل ويثبّت مباشرة */
 function card() {
   const box = document.querySelector('#app .sec-cards');
   if (!box || box.querySelector('[data-apkcard]')) return;
   const a = document.createElement('a'); a.className = 'sec-card gold'; a.href = '#'; a.setAttribute('data-apkcard', '1');
   a.innerHTML = '<div class="big">⬇️</div><div><h3>تحديث التطبيق (APK)</h3><p>تنزيل آخر إصدار من التطبيق وتثبيته من داخل التطبيق</p></div><span class="arr">›</span>';
-  paint();
-  a.onclick = ev => { ev.preventDefault(); check(true); };
+  a.onclick = ev => { ev.preventDefault(); if (hasNew && latest) start(); else check(true); };
   box.appendChild(a); paint();
 }
 const app = document.getElementById('app');
 if (app) { new MutationObserver(card).observe(app, { childList: true }); card(); }
-setTimeout(() => check(false), 6000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) check(false); });
+try { if (localStorage.getItem(FLAG)) { hasNew = true; } } catch (e) {}
+setTimeout(() => check(false), 3000);
 })();

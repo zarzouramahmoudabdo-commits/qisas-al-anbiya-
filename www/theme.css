@@ -58,3 +58,6 @@ body{background-image:radial-gradient(120% 60% at 100% 0,color-mix(in srgb,var(-
 .x-colors label{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(red,yellow,lime,aqua,blue,magenta,red);position:relative;overflow:hidden;cursor:pointer;box-shadow:0 0 0 1px var(--line)}
 .x-colors label input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
 .x-colors label span{font-size:16px;color:#fff;text-shadow:0 1px 3px #000a;pointer-events:none}
+
+/* إخفاء زر التحديث العلوي — التحديث من بطاقة الرئيسية */
+#top [data-act="update"]{display:none!important}
