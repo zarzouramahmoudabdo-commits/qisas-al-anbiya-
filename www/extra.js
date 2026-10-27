@@ -357,3 +357,6 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 
 /* المظهر */
 (() => { try { var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'theme.css'; document.head.appendChild(l); var s = document.createElement('script'); s.src = 'theme.js'; document.head.appendChild(s); } catch (e) {} })();
+
+/* ترقية الاحتراف */
+(() => { try { var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'pro.css'; document.head.appendChild(l); var s = document.createElement('script'); s.src = 'pro.js'; document.head.appendChild(s); } catch (e) {} })();
