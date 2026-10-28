@@ -86,6 +86,17 @@ async function fonts(req) {
   return (await (hit || net)) || Response.error();
 }
 
+async function nav(req, url) {
+  const cache = await caches.open(CACHE);
+  const key = url.origin + url.pathname;
+  try {
+    const r = await fetchRemote(remoteUrl(url).split('?')[0], { cache: 'no-store' });
+    if (r && r.ok) { cache.put(key, r.clone()); return r; }
+  } catch (err) { /* بلا إنترنت */ }
+  const hit = (await cache.match(key)) || (await cache.match(new URL('index.html', self.registration.scope).href));
+  return hit || fetch(req);
+}
+
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
@@ -95,7 +106,7 @@ self.addEventListener('fetch', e => {
     if (/(^|\.)(fonts\.googleapis\.com|fonts\.gstatic\.com)$/.test(url.hostname)) e.respondWith(fonts(req));
     return;
   }
-  if (req.mode === 'navigate') return;               // index.html يُقدَّم من الـ APK كما هو
+  if (req.mode === 'navigate') { e.respondWith(nav(req, url)); return; }
   if (url.pathname.endsWith('/sw.js')) return;
 
   if (url.pathname.endsWith('/version.json')) {

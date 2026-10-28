@@ -42,6 +42,11 @@ jobs:
 
       - name: APK build info
         run: echo '{"n":${{ github.run_number }},"repo":"${{ github.repository }}","tag":"qisas-latest"}' > www/apk-build.json
+      - name: Shell mode (open the website) + native fingerprint
+        run: |
+          NH=$(cat capacitor.config.json package.json tools/android-patch.py tools/ApkInstallerPlugin.java tools/make_icons.py | sha256sum | cut -c1-8)
+          echo "NH=$NH" >> "$GITHUB_ENV"
+          node tools/set-url.js "https://zarzouramahmoudabdo-commits.github.io/qisas-al-anbiya-/?apk=${{ github.run_number }}&nh=$NH"
       - name: Create Android project
         run: npx cap add android
 
@@ -80,7 +85,7 @@ jobs:
           gh release view qisas-latest >/dev/null 2>&1 || gh release create qisas-latest --title "قصص الأنبياء — أحدث نسخة APK" --notes "build 0"
           gh release upload qisas-latest "Qisas-Al-Anbiya-$N.apk" --clobber
           gh release upload qisas-latest Qisas-Al-Anbiya.apk --clobber
-          gh release edit qisas-latest --notes "build $N" --title "قصص الأنبياء — أحدث نسخة APK"
+          gh release edit qisas-latest --notes "build $N native $NH" --title "قصص الأنبياء — أحدث نسخة APK"
           for a in $(gh release view qisas-latest --json assets --jq '.assets[].name'); do
             case "$a" in "Qisas-Al-Anbiya-$N.apk"|"Qisas-Al-Anbiya.apk") ;; *) gh release delete-asset qisas-latest "$a" -y ;; esac
           done

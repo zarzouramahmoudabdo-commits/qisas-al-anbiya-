@@ -26,7 +26,12 @@ const btn = (id, label, alt) => `<button id="${id}" class="x-btn${alt ? ' alt' :
 
 async function load() {
   if (info === null) {
-    try { info = await (await fetch('apk-build.json')).json(); } catch (e) { info = false; }
+    info = { repo: 'zarzouramahmoudabdo-commits/qisas-al-anbiya-', tag: 'qisas-latest' };
+    let q = null;
+    try { const p = new URLSearchParams(location.search); if (p.get('apk')) { q = { n: +p.get('apk'), nh: p.get('nh') || '' }; localStorage.setItem('x_inst', JSON.stringify(q)); } } catch (e) {}
+    if (!q) { try { q = JSON.parse(localStorage.getItem('x_inst') || 'null'); } catch (e) {} }
+    if (q) Object.assign(info, q);
+    else { try { const b = await (await fetch('apk-build.json')).json(); Object.assign(info, b, { nh: '' }); } catch (e) { info = false; } }
   }
   return info;
 }
@@ -39,7 +44,8 @@ async function fetchLatest() {
   const as = (j.assets || []).filter(x => /\.apk$/i.test(x.name));
   const a = as.find(x => /-\d+\.apk$/i.test(x.name)) || as[0];
   if (!a || !n) throw new Error('لم أجد ملف APK في الإصدار');
-  return { n, url: a.browser_download_url, size: a.size };
+  const nh = ((j.body || '').match(/native\s+([0-9a-f]+)/) || [])[1] || '';
+  return { n, nh, url: a.browser_download_url, size: a.size };
 }
 
 async function start() {
@@ -82,8 +88,9 @@ async function check(manual) {
     const i = await load();
     if (!i) { if (manual) { modal(`هذه النسخة لا تدعم التحديث الداخلي.${btn('xa-x', 'إغلاق', 1)}`); document.getElementById('xa-x').onclick = close; } return; }
     latest = await fetchLatest();
-    flag(latest.n > i.n ? latest.n : 0);
-    if (latest.n > i.n && manual) {
+    const newer = i.nh ? (!!latest.nh && latest.nh !== i.nh) : (latest.n > i.n && !!latest.nh);
+    flag(newer ? latest.n : 0);
+    if (newer && manual) {
       const mb = latest.size ? ' (' + (latest.size / 1048576).toFixed(1) + ' MB)' : '';
       modal(`<b>يوجد إصدار جديد من التطبيق</b>${mb}<br>سيُنزَّل ويُثبَّت فوق النسخة الحالية.<br>${btn('xa-go', 'تنزيل وتثبيت')}${btn('xa-no', 'لاحقًا', 1)}`);
       document.getElementById('xa-no').onclick = close;
