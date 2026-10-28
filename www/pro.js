@@ -180,8 +180,8 @@ function markHL() {
 }
 function viewNotes() {
   const arr = HL();
-  setPage(`<h2 class="page-title">🖍 ملاحظاتي</h2>${arr.length ? arr.map(x => `<div class="dua-card"><div class="dua">${esc(x.t)}</div>${x.n ? `<div class="p-nt">📝 ${esc(x.n)}</div>` : ''}
-    <div class="row"><a class="chipbtn" href="${esc(x.h)}">فتح</a><button class="chipbtn" data-p="img" data-t="${esc(x.t)}">🖼 صورة</button><button class="chipbtn" data-p="delnote" data-id="${x.id}">حذف</button></div></div>`).join('')
+  setPage(`<h2 class="page-title">ملاحظاتي</h2>${arr.length ? arr.map(x => `<div class="dua-card"><div class="dua">${esc(x.t)}</div>${x.n ? `<div class="p-nt">📝 ${esc(x.n)}</div>` : ''}
+    <div class="row"><a class="chipbtn" href="${esc(x.h)}">فتح</a><button class="chipbtn" data-p="img" data-t="${esc(x.t)}">${IC.share}<span>صورة</span></button><button class="chipbtn" data-p="delnote" data-id="${x.id}">حذف</button></div></div>`).join('')
     : '<div class="empty">لا توجد ملاحظات بعد.<br>حدّد أي نص داخل قصة أو حديث واضغط «تظليل وملاحظة».</div>'}`);
 }
 
@@ -203,9 +203,9 @@ async function dlStatus() {
   return rows;
 }
 async function viewDl() {
-  setPage('<h2 class="page-title">⬇️ التنزيلات</h2>' + SK);
+  setPage('<h2 class="page-title">التنزيلات</h2>' + SK);
   const rows = await dlStatus();
-  const paint = rs => setPage(`<h2 class="page-title">⬇️ التنزيلات</h2>
+  const paint = rs => setPage(`<h2 class="page-title">التنزيلات</h2>
     <p class="x-sub">تُحفظ ملفات التطبيق على جهازك ليعمل بدون إنترنت. اضغط «تحديث الكل» وأنت متصل لتنزيل أي ملف ناقص أو محدّث.</p>
     ${rs ? rs.map(r => { const p = r.files.length ? Math.round(r.done / r.files.length * 100) : 0;
       return `<div class="p-dl"><div><b>${r.name}</b><small>${r.done} من ${r.files.length} ملفًا${p === 100 ? ' ✓' : ''}</small></div><div class="p-bar"><i style="width:${p}%"></i></div></div>`; }).join('')
@@ -263,8 +263,8 @@ async function shareImage(text, from) {
   catch (e) { toast('تعذّرت المشاركة على هذا الجهاز'); }
 }
 function injectShare() {
-  $$('#app .x-hd .m').forEach(m => { if (!m.querySelector('[data-p="img"]')) { const b = document.createElement('button'); b.className = 'x-btn sm alt'; b.dataset.p = 'img'; b.textContent = '🖼'; b.title = 'مشاركة كصورة'; m.appendChild(b); } });
-  $$('#app .dua-card .row').forEach(m => { if (!m.querySelector('[data-p="img"]')) { const b = document.createElement('button'); b.className = 'chipbtn'; b.dataset.p = 'img'; b.textContent = '🖼 صورة'; m.appendChild(b); } });
+  $$('#app .x-hd .m').forEach(m => { if (!m.querySelector('[data-p="img"]')) { const b = document.createElement('button'); b.className = 'x-btn sm alt p-sh'; b.dataset.p = 'img'; b.innerHTML = IC.share + '<span>صورة</span>'; b.title = 'مشاركة كصورة'; m.appendChild(b); } });
+  $$('#app .dua-card .row').forEach(m => { if (!m.querySelector('[data-p="img"]')) { const b = document.createElement('button'); b.className = 'chipbtn p-sh'; b.dataset.p = 'img'; b.innerHTML = IC.share + '<span>صورة</span>'; m.appendChild(b); } });
 }
 
 /* ───── 10) بحث موحّد ───── */
@@ -307,7 +307,7 @@ async function runFind(q) {
 }
 function viewFind(q) {
   q = decodeURIComponent(q || '');
-  setPage(`<h2 class="page-title">🔍 البحث الشامل</h2>
+  setPage(`<h2 class="page-title">البحث الشامل</h2>
     <div class="search"><input id="p-q" value="${esc(q)}" placeholder="ابحث في كل التطبيق…" autocomplete="off" enterkeyhint="search"><button data-p="find" aria-label="بحث">🔍</button></div>
     <div id="p-res"></div>`);
   const i = $('#p-q'); let t;
@@ -341,21 +341,65 @@ function onRoute() {
 }
 window.addEventListener('hashchange', onRoute);
 
-/* ───── الرئيسية: متابعة + حديث اليوم + تقدّم + اختصارات ───── */
+/* ───── الرئيسية (واجهة جديدة) ───── */
+const IC = {
+  seerah: '<svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V12m14 9V12M5 12c0-4 3-6 7-9 4 3 7 5 7 9M12 3v-1.5M9 21v-4a3 3 0 016 0v4"/></svg>',
+  prophets: '<svg viewBox="0 0 24 24"><path d="M12 6c-2-1.6-5-2-9-1.5v13c4-.5 7-.1 9 1.5 2-1.6 5-2 9-1.5v-13C17 4 14 4.4 12 6zM12 6v13"/></svg>',
+  hadith: '<svg viewBox="0 0 24 24"><path d="M7 3h9a3 3 0 013 3v13a2 2 0 01-2 2H7a3 3 0 01-3-3V6a3 3 0 013-3zM8 8h7M8 12h7M8 16h4"/></svg>',
+  history: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>',
+  nasab: '<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.3"/><circle cx="5.5" cy="19" r="2.3"/><circle cx="18.5" cy="19" r="2.3"/><path d="M12 7.3V12M12 12l-6 4.7M12 12l6 4.7"/></svg>',
+  lessons: '<svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2V17h5v-1.1c0-.8.4-1.5 1-2A6 6 0 0012 3z"/></svg>',
+  home: '<svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7M6 10v10h4v-6h4v6h4V10"/></svg>',
+  heart: '<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>',
+  more: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg>',
+  share: '<svg viewBox="0 0 24 24"><path d="M12 15V4m0 0L8 8m4-4l4 4M5 13v6a1 1 0 001 1h12a1 1 0 001-1v-6"/></svg>',
+  gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>',
+  aa: '<svg viewBox="0 0 24 24"><path d="M3 19l5-13 5 13M5 14h6M15 19l3.5-8.5L22 19M16.2 16.5h4.6"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',
+  search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>',
+  note: '<svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5zM9 11h6M9 15h4"/></svg>',
+  dl: '<svg viewBox="0 0 24 24"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14"/></svg>'
+};
+const toAr = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+function greet() { const h = new Date().getHours(); return (h < 5 ? 'ليلة مباركة' : h < 12 ? 'صباح الخير' : h < 17 ? 'نهارك سعيد' : h < 20 ? 'مساء الخير' : 'ليلة مباركة') + '، ' + hijri(); }
+function hijri() { try { return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-arab', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date()).replace(/ هـ$/, '') + ' هـ'; } catch (e) { return ''; } }
+function resumeCard() {
+  const d = D(), L = ls.get('p_last', null), A = ls.get('tamy_last', null), prog = ls.get('tamy_progress', {});
+  let href = '', title = '', kind = '', pct = null;
+  const m = L && L.h && L.h.match(/^#\/item\/([^/]+)\/([^/]+)/);
+  if (L && L.h) { href = L.h; title = L.t; if (m) { kind = m[1]; const pr = prog[m[1] + ':' + m[2]]; if (pr && pr.total) pct = pr.done ? 100 : Math.round(pr.idx / pr.total * 100); } }
+  else if (A && A.kind) { const it = ((d[A.kind] || []).find(x => x.id === A.id)); if (it) { href = `#/item/${A.kind}/${A.id}/r`; title = it.title; const pr = prog[A.kind + ':' + A.id]; if (pr && pr.total) pct = pr.done ? 100 : Math.round(pr.idx / pr.total * 100); } }
+  if (!href) { const f = (d.prophets || [])[0]; if (!f) return ''; return `<a class="h2-resume start" href="#/item/prophets/${esc(f.id)}"><div class="h2-ring"><b><i>${IC.prophets}</i></b></div><div class="tx"><small>ابدأ رحلتك</small><b>${esc(f.title)}</b></div><span class="go">ابدأ ${IC.arrow}</span></a>`; }
+  const r = 24, c = 2 * Math.PI * r, p = pct == null ? 0 : pct;
+  const ring = `<div class="h2-ring"><svg viewBox="0 0 56 56"><circle cx="28" cy="28" r="${r}" class="bg"/><circle cx="28" cy="28" r="${r}" class="fg" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c * (1 - p / 100)).toFixed(1)}"/></svg><b>${pct == null ? '<i>' + IC.seerah + '</i>' : toAr(p) + '٪'}</b></div>`;
+  return `<a class="h2-resume" href="${esc(href)}" data-p="resume">${ring}<div class="tx"><small>أكمل من حيث توقفت</small><b>${esc(title)}</b></div><span class="go">تابع ${IC.arrow}</span></a>`;
+}
 function homeBlock() {
   const box = $('#app .sec-cards'); if (!box || $('#app .p-home')) return;
-  const d = D(), L = ls.get('p_last', null), wrap = document.createElement('div'); wrap.className = 'p-home';
-  let html = '';
-  const appCont = $('#app a.cont');
-  if (L && L.h && !(appCont && appCont.getAttribute('href').replace(/\/r$/, '') === L.h)) html += `<a class="p-cont" href="${esc(L.h)}" data-p="resume"><span>📌</span><div><b>أكمل من حيث توقفت</b><small>${esc(L.t)}</small></div><span class="go">تابع</span></a>`;
-  html += '<div class="p-daily" id="p-daily"></div>';
-  const stories = ['seerah', 'prophets'].reduce((a, k) => a.concat(d[k] || []), []);
-  const prog = ls.get('tamy_progress', {});
-  const done = Object.keys(prog).filter(k => prog[k] && prog[k].done).length;
-  const seen = Object.keys(ls.get('p_seen', {})).length;
-  html += `<div class="p-stats"><div><b>${done}</b><small>من ${stories.length} قصة مكتملة</small><div class="p-bar"><i style="width:${stories.length ? Math.round(done / stories.length * 100) : 0}%"></i></div></div><div><b>${seen}</b><small>صفحة من التاريخ والأحاديث والأنساب</small></div></div>
-    <div class="p-tiles"><a class="p-tile" href="#/p/find/">🔍<span>بحث شامل</span></a><a class="p-tile" href="#/p/notes">🖍<span>ملاحظاتي</span></a><a class="p-tile" href="#/p/dl">⬇️<span>التنزيلات</span></a></div>`;
-  wrap.innerHTML = html; box.parentNode.insertBefore(wrap, box);
+  const d = D(), wrap = document.createElement('div'); wrap.className = 'p-home';
+  const cnt = k => (d[k] || []).length;
+  const tile = (href, ic, t, meta, cls) => `<a class="h2-tile ${cls || ''}" href="${href}"><span class="ic">${IC[ic]}</span><b>${t}</b><small>${meta}</small></a>`;
+  const prog = ls.get('tamy_progress', {}), stories = cnt('seerah') + cnt('prophets');
+  const done = Object.keys(prog).filter(k => prog[k] && prog[k].done).length, seen = Object.keys(ls.get('p_seen', {})).length;
+  wrap.innerHTML = `
+  <header class="h2-hero"><div class="arch" aria-hidden="true"></div>
+    <div class="date">${esc(greet())}</div>
+    <h1>قصص الأنبياء</h1>
+    <p>اقرأ سيرة النبي ﷺ وسير الأنبياء، وتعلّم من الأحاديث والتاريخ والأنساب.</p>
+  </header>
+  <form class="h2-search" data-form="search"><span>${IC.search}</span><input name="q" placeholder="ابحث في كل التطبيق" autocomplete="off" enterkeyhint="search"></form>
+  ${resumeCard()}
+  <div class="h2-bento">
+    ${tile('#/seerah', 'seerah', 'السيرة النبوية', toAr(cnt('seerah')) + ' محطة من المولد إلى الوفاة', 'wide gold')}
+    ${tile('#/prophets', 'prophets', 'قصص الأنبياء', toAr(cnt('prophets')) + ' نبيًّا')}
+    ${tile('#/x/hadith', 'hadith', 'الأحاديث', 'أربعة كتب مع الشرح')}
+    ${tile('#/x/history', 'history', 'التاريخ الإسلامي', '٢٢ فصلًا')}
+    ${tile('#/x/nasab', 'nasab', 'أنساب الأنبياء', 'من آدم إلى محمد ﷺ')}
+    ${tile('#/lessons', 'lessons', 'الفوائد والعبر', 'دروس وأدعية ومراجع', 'wide slim')}
+  </div>
+  <div class="p-daily" id="p-daily"></div>
+  `;
+  box.parentNode.insertBefore(wrap, box);
   daily();
 }
 async function daily() {
@@ -365,11 +409,11 @@ async function daily() {
   try {
     const b = await getJson('hadith/nawawi40.json'); const all = []; b.chapters.forEach((c, ci) => c.h.forEach(h => all.push([h[0], h[1], ci])));
     if (all.length) { const h = all[day % all.length];
-      out += `<div class="p-dc"><small>📜 حديث اليوم · الأربعون النووية ${esc(h[0])}</small><div class="t">${esc(h[1])}</div><div class="r"><button class="x-btn sm alt" data-p="img" data-t="${esc(h[1])}" data-f="الأربعون النووية · ${esc(h[0])}">🖼 مشاركة</button><a class="x-btn sm" href="#/x/hadith/nawawi40/${h[2]}">افتح</a></div></div>`; }
+      out += `<div class="p-dc"><small><i class="k"></i>حديث اليوم · الأربعون النووية ${esc(h[0])}</small><div class="t">${esc(h[1])}</div><div class="r"><button class="x-btn sm alt" data-p="img" data-t="${esc(h[1])}" data-f="الأربعون النووية · ${esc(h[0])}">${IC.share}<span>مشاركة</span></button><a class="x-btn sm" href="#/x/hadith/nawawi40/${h[2]}">افتح</a></div></div>`; }
   } catch (e) {}
   const du = D().duas || [];
   if (du.length) { const x = du[day % du.length];
-    out += `<div class="p-dc"><small>🤲 دعاء اليوم</small><div class="t">${esc(x.text)}</div><div class="r"><button class="x-btn sm alt" data-p="img" data-t="${esc(x.text)}" data-f="${esc(x.ref || '')}">🖼 مشاركة</button></div></div>`; }
+    out += `<div class="p-dc"><small><i class="k"></i>دعاء اليوم</small><div class="t">${esc(x.text)}</div><div class="r"><button class="x-btn sm alt" data-p="img" data-t="${esc(x.text)}" data-f="${esc(x.ref || '')}">${IC.share}<span>مشاركة</span></button></div></div>`; }
   el.innerHTML = out;
 }
 
@@ -389,12 +433,50 @@ function onboarding() {
   setTimeout(show, 900);
 }
 
+
+/* ───── الشريط السفلي الجديد + قائمة «المزيد» + الترويسة ───── */
+const NAVS = [['home', '#/', 'home', 'الرئيسية'], ['seerah', '#/seerah', 'seerah', 'السيرة'], ['prophets', '#/prophets', 'prophets', 'الأنبياء'], ['favs', '#/favs', 'heart', 'المفضلة'], ['more', '', 'more', 'المزيد']];
+function buildNav() {
+  const n = document.getElementById('nav'); if (!n || n.dataset.pn) return; n.dataset.pn = '1';
+  n.innerHTML = NAVS.map(x => x[0] === 'more'
+    ? `<a role="button" tabindex="0" data-n="more" data-p="more"><span class="pn-i">${IC[x[2]]}</span><em>${x[3]}</em></a>`
+    : `<a href="${x[1]}" data-n="${x[0]}"><span class="pn-i">${IC[x[2]]}</span><em>${x[3]}</em></a>`).join('');
+  const sync = () => { const m = $('#nav [data-n="more"]'); if (m) m.classList.toggle('new', !!(window.__qisasApkHas && window.__qisasApkHas())); };
+  document.addEventListener('qisas-apk-flag', sync); sync(); setTimeout(sync, 4000);
+}
+const EMBLEM = "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#15855c"/><stop offset="1" stop-color="#063d29"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#g)"/><path d="M32 7c-9.5 6-15 14-15 25h30C47 21 41.500 13 32 7z" fill="none" stroke="#e8c75a" stroke-width="1.6" opacity=".75"/><path d="M36.500 15a9.500 9.500 0 100 15 7.500 7.500 0 010-15z" fill="#e8c75a"/><path d="M41 18.500l1 2.200 2.300.3-1.700 1.600.4 2.300-2-1.100-2 1.100.4-2.300-1.700-1.600 2.300-.3z" fill="#e8c75a"/><path d="M10 49c7-3.500 15-3.500 22 .5 7-4 15-4 22-.5V37c-7-3.500-15-3.500-22 .5-7-4-15-4-22-.5z" fill="#f6ecd0"/><path d="M32 37.500V49.500" stroke="#0b5d3b" stroke-width="1.400"/></svg>');
+function header() {
+  const im = $('#top .brand img'); if (im && im.dataset.pe !== '1') { im.src = EMBLEM; im.dataset.pe = '1'; }
+  const br = $('#top .brand'); if (br && br.dataset.pt !== '1') { br.dataset.pt = '1'; [...br.childNodes].forEach(c => { if (c.nodeType === 3 && c.textContent.trim()) c.textContent = 'قصص الأنبياء'; }); }
+}
+function moreSheet() {
+  const d = D(), prog = ls.get('tamy_progress', {}), stories = (d.seerah || []).length + (d.prophets || []).length;
+  const done = Object.keys(prog).filter(k => prog[k] && prog[k].done).length, seen = Object.keys(ls.get('p_seen', {})).length;
+  const pct = stories ? Math.round(done / stories * 100) : 0, hasNew = !!(window.__qisasApkHas && window.__qisasApkHas());
+  const row = (href, ic, t, sub, attr) => `<a class="ms-row" ${href ? `href="${href}"` : 'role="button"'} ${attr || ''}><span class="ic">${IC[ic]}</span><div><b>${t}</b>${sub ? `<small>${sub}</small>` : ''}</div><span class="chev">${IC.arrow}</span></a>`;
+  const m = modal(`<div class="ms-grip"></div>
+    <div class="ms-prog"><div><b>${done}</b><small>من ${stories} قصة</small></div><div class="bar"><i style="width:${pct}%"></i></div><div><b>${seen}</b><small>صفحة قرأتها</small></div></div>
+    <div class="ms-g"><h4>المكتبة</h4>
+      ${row('#/x/hadith', 'hadith', 'الأحاديث', 'أربعة كتب مع الشرح')}${row('#/x/history', 'history', 'التاريخ الإسلامي', 'اثنان وعشرون فصلًا')}
+      ${row('#/x/nasab', 'nasab', 'أنساب الأنبياء', 'من آدم إلى محمد ﷺ')}${row('#/lessons', 'lessons', 'الفوائد والعبر', 'دروس وأدعية ومراجع')}</div>
+    <div class="ms-g"><h4>أدواتي</h4>
+      ${row('#/p/find/', 'search', 'بحث شامل', 'في القصص والأحاديث والتاريخ')}${row('#/p/notes', 'note', 'ملاحظاتي', 'المقاطع التي ظلّلتها')}
+      ${row('#/p/dl', 'dl', 'التنزيلات', 'للعمل بدون إنترنت')}${row('', 'aa', 'وضع القراءة', 'الخط والخلفية والتباعد', 'data-p="read2"')}</div>
+    <div class="ms-g"><h4>التطبيق</h4>
+      ${row('#/settings', 'gear', 'الإعدادات', 'المظهر واللون وحجم الخط')}${row('', 'dl', 'تحديث التطبيق', hasNew ? 'يتوفر إصدار جديد — اضغط للتثبيت' : 'التحقق من آخر إصدار', 'data-p="apk"' + (hasNew ? ' data-new="1"' : ''))}</div>`);
+  m.classList.add('sheet');
+  m.addEventListener('click', e => { if (e.target.closest('a.ms-row[href]')) setTimeout(closeModal, 0); });
+}
+
 /* ───── الأحداث ───── */
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-p]'); if (!el) return;
   const a = el.dataset.p;
   if (a === 'up') window.scrollTo({ top: 0, behavior: 'smooth' });
   else if (a === 'read') readPanel();
+  else if (a === 'more') moreSheet();
+  else if (a === 'read2') { closeModal(); readPanel(); }
+  else if (a === 'apk') { closeModal(); if (window.__qisasApkAction) window.__qisasApkAction(); else toast('التحديث الداخلي متاح داخل تطبيق أندرويد فقط'); }
   else if (a === 'close') closeModal();
   else if (a === 'reset') { RD.fs = 0; RD.ff = ''; RD.lh = 0; RD.bg = ''; ls.set('p_read', RD); applyRead(); document.documentElement.style.setProperty('--fs', '21px'); closeModal(); }
   else if (a === 'hl') addNote();
@@ -412,8 +494,9 @@ document.addEventListener('click', e => {
   }
 });
 
-function afterRender() { fabs(); fabState(); injectShare(); paintSeen(); markHL(); homeBlock(); saveLast(); }
+function afterRender() { const A = app(); const hm = !!$('.p-home'); if (A) A.classList.toggle('p2', hm); document.body.classList.toggle('p-onhome', hm); buildNav(); header(); fabs(); fabState(); injectShare(); paintSeen(); markHL(); homeBlock(); saveLast(); }
 function boot() {
+  try { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&display=swap'; document.head.appendChild(l); } catch (e) {}
   applyRead(); watchApp(); onboarding();
   if (/^#\/(search|p\/)/.test(location.hash || '')) onRoute();
 }

@@ -8,7 +8,7 @@ let P; try { P = C.registerPlugin('ApkInstaller'); } catch (e) { return; }
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let info = null, latest = null, busy = false, hasNew = false;
 const FLAG = 'x_apk_new';
-function flag(n) { try { n ? localStorage.setItem(FLAG, String(n)) : localStorage.removeItem(FLAG); } catch (e) {} hasNew = !!n; paint(); }
+function flag(n) { try { n ? localStorage.setItem(FLAG, String(n)) : localStorage.removeItem(FLAG); } catch (e) {} hasNew = !!n; paint(); try { document.dispatchEvent(new Event('qisas-apk-flag')); } catch (e) {} }
 function paint() { const c = document.querySelector('[data-apkcard]'); if (c) c.classList.toggle('has-update', hasNew); }
 
 function modal(html) {
@@ -87,6 +87,8 @@ async function check(manual) {
   }
 }
 window.__qisasApkCheck = check;
+window.__qisasApkAction = () => { if (hasNew && latest) start(); else check(true); };
+window.__qisasApkHas = () => hasNew;
 
 /* بطاقة تحديث التطبيق في الرئيسية: نقطة حمراء عند وجود إصدار جديد، والضغط عليها ينزّل ويثبّت مباشرة */
 function card() {
