@@ -55,3 +55,21 @@ fp.parent.mkdir(parents=True, exist_ok=True)
 fp.write_text('<?xml version="1.0" encoding="utf-8"?>\n<paths xmlns:android="http://schemas.android.com/apk/res/android">\n'
               '    <external-path name="my_images" path="." />\n    <cache-path name="my_cache_images" path="." />\n'
               '    <files-path name="my_files" path="." />\n</paths>\n', encoding='utf8')
+
+# 5) ألوان الإقلاع: نمنع ظهور شاشة خضراء قبل تحميل الواجهة (آمنة: لا تكسر البناء عند الفشل)
+try:
+    BG = '#0e1512'
+    res = app / 'src' / 'main' / 'res'
+    (res / 'values').mkdir(parents=True, exist_ok=True)
+    (res / 'values' / 'qisas_colors.xml').write_text('<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="qisas_bg">%s</color>\n</resources>\n' % BG, encoding='utf8')
+    sp = res / 'values' / 'styles.xml'
+    if sp.exists():
+        s = sp.read_text(encoding='utf8')
+        s = s.replace('@drawable/splash', '@color/qisas_bg')
+        m = re.search(r'<style name="AppTheme\.NoActionBarLaunch"[^>]*parent="Theme\.SplashScreen"[^>]*>', s)
+        if m and 'windowSplashScreenBackground' not in s:
+            s = s[:m.end()] + '\n        <item name="windowSplashScreenBackground">@color/qisas_bg</item>' + s[m.end():]
+        sp.write_text(s, encoding='utf8')
+    print('تم ضبط لون الإقلاع', BG)
+except Exception as e:
+    print('تنبيه: تعذّر ضبط لون الإقلاع:', e)
