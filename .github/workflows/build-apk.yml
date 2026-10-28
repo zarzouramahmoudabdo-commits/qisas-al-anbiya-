@@ -71,9 +71,16 @@ jobs:
           path: Qisas-Al-Anbiya.apk
 
       - name: Publish to Releases
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: qisas-latest
-          name: قصص الأنبياء — أحدث نسخة APK
-          body: build ${{ github.run_number }}
-          files: Qisas-Al-Anbiya.apk
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # QISAS-SAFE-RELEASE: نرفع الملف الجديد أولًا، ثم نحدّث رقم الإصدار، ثم نحذف القديم
+          N=${{ github.run_number }}
+          cp Qisas-Al-Anbiya.apk "Qisas-Al-Anbiya-$N.apk"
+          gh release view qisas-latest >/dev/null 2>&1 || gh release create qisas-latest --title "قصص الأنبياء — أحدث نسخة APK" --notes "build 0"
+          gh release upload qisas-latest "Qisas-Al-Anbiya-$N.apk" --clobber
+          gh release upload qisas-latest Qisas-Al-Anbiya.apk --clobber
+          gh release edit qisas-latest --notes "build $N" --title "قصص الأنبياء — أحدث نسخة APK"
+          for a in $(gh release view qisas-latest --json assets --jq '.assets[].name'); do
+            case "$a" in "Qisas-Al-Anbiya-$N.apk"|"Qisas-Al-Anbiya.apk") ;; *) gh release delete-asset qisas-latest "$a" -y ;; esac
+          done

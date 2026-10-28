@@ -36,7 +36,8 @@ async function fetchLatest() {
   if (!r.ok) throw new Error('تعذّر الاتصال بـ GitHub (' + r.status + ')');
   const j = await r.json();
   const n = parseInt(((j.body || '').match(/build\s+(\d+)/) || [])[1], 10);
-  const a = (j.assets || []).find(x => /\.apk$/i.test(x.name));
+  const as = (j.assets || []).filter(x => /\.apk$/i.test(x.name));
+  const a = as.find(x => /-\d+\.apk$/i.test(x.name)) || as[0];
   if (!a || !n) throw new Error('لم أجد ملف APK في الإصدار');
   return { n, url: a.browser_download_url, size: a.size };
 }
@@ -56,7 +57,15 @@ async function start() {
       const el = document.getElementById('xa-p');
       if (el) el.textContent = (p.total > 0 ? Math.round(p.done / p.total * 100) : Math.round(p.done / 1048576) + ' MB') + (p.total > 0 ? '%' : '');
     });
-    try { await P.download({ url: latest.url }); } finally { try { h.remove(); } catch (e) {} }
+    try {
+      try { await P.download({ url: latest.url }); }
+      catch (e1) {
+        if (!/404|403|5\d\d/.test(String(e1 && e1.message || e1))) throw e1;
+        const el = document.getElementById('xa-p'); if (el) el.textContent = 'الإصدار قيد الرفع… إعادة المحاولة';
+        await new Promise(r => setTimeout(r, 6000));
+        latest = await fetchLatest(); await P.download({ url: latest.url });
+      }
+    } finally { try { h.remove(); } catch (e) {} }
     modal('<b>تم التنزيل</b><br>اضغط «تثبيت» في الشاشة التي ستظهر.');
     await P.install();
     setTimeout(close, 2500);
