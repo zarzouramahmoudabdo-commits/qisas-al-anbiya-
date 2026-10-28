@@ -539,7 +539,7 @@ document.addEventListener('click', e => {
 });
 
 function exposeApi() { Object.assign(window.QPRO, { $, $$, esc, strip, ls, toast, modal, closeModal, dragClose, IC, setPage, getJson, loadScript, app, D, toAr }); }
-function afterRender() { homeBlock(); const A = app(); const hm = !!$('.p-home'); if (A) { A.classList.toggle('p2', hm); A.classList.add('p-ready'); } document.body.classList.toggle('p-onhome', hm); buildNav(); header(); fabs(); fabState(); injectShare(); paintSeen(); markHL(); saveLast(); }
+function afterRender() { homeBlock(); const A = app(); const hm = !!$('.p-home'); if (A) { A.classList.toggle('p2', hm); A.classList.add('p-ready'); document.documentElement.classList.add('q-ready'); } document.body.classList.toggle('p-onhome', hm); buildNav(); header(); fabs(); fabState(); injectShare(); paintSeen(); markHL(); saveLast(); }
 function boot() {
   try { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&display=swap'; document.head.appendChild(l); } catch (e) {}
   exposeApi(); applyRead(); watchApp(); onboarding();
