@@ -40,11 +40,14 @@ document.addEventListener('pointerdown', e => {
 
 /* ───── 2) انتقال ناعم بين الصفحات + 3) هيكل التحميل ───── */
 let inObs;
+function play(a) { a.classList.remove('p-in'); void a.offsetWidth; a.classList.add('p-in'); }
 function watchApp() {
   const a = app(); if (!a) return setTimeout(watchApp, 150);
   inObs = new MutationObserver(() => {
-    a.classList.remove('p-in'); void a.offsetWidth; a.classList.add('p-in');
-    clearTimeout(watchApp._t); watchApp._t = setTimeout(afterRender, 60);
+    afterRender();                                   // فورًا قبل الرسم لتفادي ومضة الواجهة القديمة
+    if (a.querySelector('.p-skel')) { a._wasSk = true; play(a); }
+    else if (a._wasSk) a._wasSk = false;            // استبدال الهيكل بالمحتوى: بدون إعادة حركة
+    else play(a);
   });
   inObs.observe(a, { childList: true });
   afterRender();
@@ -516,11 +519,11 @@ document.addEventListener('click', e => {
   }
 });
 
-function afterRender() { const A = app(); const hm = !!$('.p-home'); if (A) A.classList.toggle('p2', hm); document.body.classList.toggle('p-onhome', hm); buildNav(); header(); fabs(); fabState(); injectShare(); paintSeen(); markHL(); homeBlock(); saveLast(); }
+function afterRender() { homeBlock(); const A = app(); const hm = !!$('.p-home'); if (A) { A.classList.toggle('p2', hm); A.classList.add('p-ready'); } document.body.classList.toggle('p-onhome', hm); buildNav(); header(); fabs(); fabState(); injectShare(); paintSeen(); markHL(); saveLast(); }
 function boot() {
   try { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&display=swap'; document.head.appendChild(l); } catch (e) {}
   applyRead(); watchApp(); onboarding();
   if (/^#\/(search|p\/)/.test(location.hash || '')) onRoute();
 }
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 150)); else setTimeout(boot, 150);
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 0)); else setTimeout(boot, 0);
 })();

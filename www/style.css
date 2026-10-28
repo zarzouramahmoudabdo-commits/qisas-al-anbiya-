@@ -154,3 +154,7 @@ body.has-player main{padding-bottom:230px}
 
 .toast{position:fixed;left:50%;bottom:calc(var(--nav) + 20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#111;color:#fff;padding:11px 18px;border-radius:24px;font-size:14px;z-index:50;max-width:88vw;text-align:center;box-shadow:0 6px 20px #0006}
 .toast[hidden]{display:none}
+
+/*QISAS-BOOT*/
+#app:not(.p-ready){opacity:0;animation:qBootShow 0s linear 1.6s forwards}
+@keyframes qBootShow{to{opacity:1}}
