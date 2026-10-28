@@ -4,6 +4,7 @@
 'use strict';
 if (window.__qisasPro) return;
 window.__qisasPro = true;
+window.QPRO = {};
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -81,14 +82,19 @@ function paintSeen() {
 }
 
 /* ───── 5) وضع القراءة ───── */
-const RD = Object.assign({ fs: 0, ff: '', lh: 0, bg: '' }, ls.get('p_read', {}));
+const RD = Object.assign({ fs: 0, ff: '', lh: 0, bg: '', auto: false, from: 19, to: 5, warm: true }, ls.get('p_read', {}));
+const nightNow = () => { const h = new Date().getHours(); return RD.from > RD.to ? (h >= RD.from || h < RD.to) : (h >= RD.from && h < RD.to); };
 function applyRead() {
   const r = document.documentElement.style;
   if (RD.fs) r.setProperty('--fs', RD.fs + 'px');
   RD.lh ? r.setProperty('--lh', RD.lh) : r.removeProperty('--lh');
   RD.ff ? r.setProperty('--ff', RD.ff) : r.removeProperty('--ff');
-  RD.bg ? document.documentElement.setAttribute('data-rbg', RD.bg) : document.documentElement.removeAttribute('data-rbg');
+  const night = RD.auto && nightNow(), bg = night ? 'dark' : RD.bg;
+  bg ? document.documentElement.setAttribute('data-rbg', bg) : document.documentElement.removeAttribute('data-rbg');
+  let w = document.getElementById('p-warm');
+  if (night && RD.warm) { if (!w) { w = document.createElement('div'); w.id = 'p-warm'; document.body.appendChild(w); } } else if (w) w.remove();
 }
+setInterval(() => { if (RD.auto) applyRead(); }, 60000);
 const FONTS = [['', 'الافتراضي'], ["'Amiri','Noto Naskh Arabic','Traditional Arabic',serif", 'نسخ'], ["'Noto Sans Arabic','Segoe UI',Tahoma,sans-serif", 'بسيط']];
 const BGS = [['', 'الافتراضي', '#faf6ea'], ['white', 'أبيض', '#ffffff'], ['paper', 'ورقي', '#f3e7c9'], ['dark', 'داكن', '#16211c'], ['black', 'أسود', '#000']];
 function readPanel() {
@@ -97,8 +103,17 @@ function readPanel() {
     <div class="p-row"><span>تباعد الأسطر</span><input id="p-lh" type="range" min="1.5" max="2.8" step="0.1" value="${RD.lh || 2}"></div>
     <div class="p-row"><span>الخط</span><div class="p-seg">${FONTS.map(f => `<button data-pf="${esc(f[0])}" class="${RD.ff === f[0] ? 'on' : ''}">${f[1]}</button>`).join('')}</div></div>
     <div class="p-row"><span>الخلفية</span><div class="p-bgs">${BGS.map(b => `<button data-pb="${b[0]}" title="${b[1]}" class="${RD.bg === b[0] ? 'on' : ''}" style="background:${b[2]}"></button>`).join('')}</div></div>
+    <div class="p-row"><label class="p-sw"><span>وضع ليلي تلقائي</span><input type="checkbox" id="p-auto" ${RD.auto ? 'checked' : ''}></label>
+      <div class="p-night" ${RD.auto ? '' : 'hidden'}><span>من</span><select id="p-from">${[17, 18, 19, 20, 21, 22].map(h => `<option value="${h}" ${RD.from === h ? 'selected' : ''}>${h}:00</option>`).join('')}</select>
+        <span>إلى</span><select id="p-to">${[3, 4, 5, 6, 7].map(h => `<option value="${h}" ${RD.to === h ? 'selected' : ''}>${h}:00</option>`).join('')}</select>
+        <label class="p-sw"><span>تخفيف الضوء الأزرق</span><input type="checkbox" id="p-warm" ${RD.warm ? 'checked' : ''}></label></div></div>
     <div class="p-btns"><button class="x-btn alt" data-p="reset">إعادة الضبط</button><button class="x-btn" data-p="close">تم</button></div>`);
   $('#p-fs', m).oninput = e => { RD.fs = +e.target.value; $('#p-fsv', m).textContent = RD.fs; ls.set('p_read', RD); applyRead(); };
+  const sv = () => { ls.set('p_read', RD); applyRead(); };
+  $('#p-auto', m).onchange = e => { RD.auto = e.target.checked; $('.p-night', m).hidden = !RD.auto; sv(); };
+  $('#p-from', m).onchange = e => { RD.from = +e.target.value; sv(); };
+  $('#p-to', m).onchange = e => { RD.to = +e.target.value; sv(); };
+  $('#p-warm', m).onchange = e => { RD.warm = e.target.checked; sv(); };
   $('#p-lh', m).oninput = e => { RD.lh = +e.target.value; ls.set('p_read', RD); applyRead(); };
   m.addEventListener('click', e => {
     const f = e.target.closest('[data-pf]'), b = e.target.closest('[data-pb]');
@@ -358,7 +373,7 @@ function onRoute() {
   if (/^#\/search/.test(h)) { location.replace('#/p/find/' + h.replace(/^#\/search\/?/, '')); return; }
   const p = h.match(/^#\/p\/([a-z]+)\/?(.*)$/);
   if (p) {
-    if (p[1] === 'find') viewFind(p[2]); else if (p[1] === 'notes') viewNotes(); else if (p[1] === 'dl') viewDl();
+    if (p[1] === 'map') { window.QPRO.viewMap ? window.QPRO.viewMap(p[2]) : setPage('<div class="empty">جارٍ تحميل الخريطة…</div>'); } else if (p[1] === 'find') viewFind(p[2]); else if (p[1] === 'notes') viewNotes(); else if (p[1] === 'dl') viewDl();
     return;
   }
   if (/^#\/x\/(hadith\/[^/]+|history\/[^/]+|nasab)/.test(h)) { const a = app(); if (a && !a.querySelector('.x-wrap')) a.innerHTML = SK; }
@@ -378,6 +393,8 @@ const IC = {
   heart: '<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>',
   more: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg>',
   share: '<svg viewBox="0 0 24 24"><path d="M12 15V4m0 0L8 8m4-4l4 4M5 13v6a1 1 0 001 1h12a1 1 0 001-1v-6"/></svg>',
+  map: '<svg viewBox="0 0 24 24"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14"/></svg>',
+  new: '<svg viewBox="0 0 24 24"><path d="M12 3l2.1 5.4L20 9l-4.4 3.8L17 19l-5-3-5 3 1.4-6.2L4 9l5.900-.6z"/></svg>',
   gear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>',
   aa: '<svg viewBox="0 0 24 24"><path d="M3 19l5-13 5 13M5 14h6M15 19l3.5-8.5L22 19M16.2 16.5h4.6"/></svg>',
   arrow: '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',
@@ -426,6 +443,7 @@ function homeBlock() {
   `;
   box.parentNode.insertBefore(wrap, box);
   daily();
+  try { window.QPRO.onHome && window.QPRO.onHome(wrap); } catch (e) {}
 }
 async function daily() {
   const el = $('#p-daily'); if (!el) return;
@@ -486,10 +504,10 @@ function moreSheet() {
       ${row('#/x/nasab', 'nasab', 'أنساب الأنبياء', 'من آدم إلى محمد ﷺ')}${row('#/lessons', 'lessons', 'الفوائد والعبر', 'دروس وأدعية ومراجع')}</div>
     <div class="ms-g"><h4>أدواتي</h4>
       ${row('#/p/find/', 'search', 'بحث شامل', 'في القصص والأحاديث والتاريخ')}${row('#/p/notes', 'note', 'ملاحظاتي', 'المقاطع التي ظلّلتها')}
-      ${row('#/p/dl', 'dl', 'التنزيلات', 'للعمل بدون إنترنت')}${row('', 'aa', 'وضع القراءة', 'الخط والخلفية والتباعد', 'data-p="read2"')}</div>
+      ${row('#/p/map', 'map', 'خريطة الأحداث', 'أماكن الأنبياء والسيرة والغزوات')}${row('#/p/dl', 'dl', 'التنزيلات', 'للعمل بدون إنترنت')}${row('', 'aa', 'وضع القراءة', 'الخط والخلفية والتباعد', 'data-p="read2"')}</div>
     <div class="ms-g"><h4>التطبيق</h4>
-      ${row('#/settings', 'gear', 'الإعدادات', 'المظهر واللون وحجم الخط')}${row('', 'dl', 'تحديث التطبيق', hasNew ? 'يتوفر إصدار جديد — اضغط للتثبيت' : 'التحقق من آخر إصدار', 'data-p="apk"' + (hasNew ? ' data-new="1"' : ''))}</div>`);
-  m.classList.add('sheet'); dragClose(m);
+      ${row('', 'new', 'ما الجديد', 'آخر التحديثات والمحتوى المضاف', 'data-p="whatsnew"')}${row('#/settings', 'gear', 'الإعدادات', 'المظهر واللون وحجم الخط')}${row('', 'dl', 'تحديث التطبيق', hasNew ? 'يتوفر إصدار جديد — اضغط للتثبيت' : 'التحقق من آخر إصدار', 'data-p="apk"' + (hasNew ? ' data-new="1"' : ''))}</div>`);
+  m.classList.add('sheet'); dragClose(m); try { window.QPRO.onSheet && window.QPRO.onSheet(m); } catch (e) {}
   m.addEventListener('click', e => { if (e.target.closest('a.ms-row[href]')) setTimeout(closeModal, 0); });
 }
 
@@ -500,10 +518,11 @@ document.addEventListener('click', e => {
   if (a === 'up') window.scrollTo({ top: 0, behavior: 'smooth' });
   else if (a === 'read') readPanel();
   else if (a === 'more') moreSheet();
+  else if (a === 'whatsnew') { closeModal(); window.QPRO.showNew && window.QPRO.showNew(true); }
   else if (a === 'read2') { closeModal(); readPanel(); }
   else if (a === 'apk') { closeModal(); if (window.__qisasApkAction) window.__qisasApkAction(); else toast('التحديث الداخلي متاح داخل تطبيق أندرويد فقط'); }
   else if (a === 'close') closeModal();
-  else if (a === 'reset') { RD.fs = 0; RD.ff = ''; RD.lh = 0; RD.bg = ''; ls.set('p_read', RD); applyRead(); document.documentElement.style.setProperty('--fs', '21px'); closeModal(); }
+  else if (a === 'reset') { RD.fs = 0; RD.ff = ''; RD.lh = 0; RD.bg = ''; RD.auto = false; ls.set('p_read', RD); applyRead(); document.documentElement.style.setProperty('--fs', '21px'); closeModal(); }
   else if (a === 'hl') addNote();
   else if (a === 'savenote') saveNote();
   else if (a === 'delnote') { ls.set('p_notes', HL().filter(x => String(x.id) !== el.dataset.id)); viewNotes(); }
@@ -519,10 +538,12 @@ document.addEventListener('click', e => {
   }
 });
 
+function exposeApi() { Object.assign(window.QPRO, { $, $$, esc, strip, ls, toast, modal, closeModal, dragClose, IC, setPage, getJson, loadScript, app, D, toAr }); }
 function afterRender() { homeBlock(); const A = app(); const hm = !!$('.p-home'); if (A) { A.classList.toggle('p2', hm); A.classList.add('p-ready'); } document.body.classList.toggle('p-onhome', hm); buildNav(); header(); fabs(); fabState(); injectShare(); paintSeen(); markHL(); saveLast(); }
 function boot() {
   try { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&display=swap'; document.head.appendChild(l); } catch (e) {}
-  applyRead(); watchApp(); onboarding();
+  exposeApi(); applyRead(); watchApp(); onboarding();
+  ['live.js', 'data-map.js', 'map.js'].forEach(f => loadScript(f).catch(() => {}));
   if (/^#\/(search|p\/)/.test(location.hash || '')) onRoute();
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 0)); else setTimeout(boot, 0);
