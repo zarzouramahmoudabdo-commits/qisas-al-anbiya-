@@ -271,3 +271,6 @@ a,button{-webkit-touch-callout:none}
 .h2-ref:active{transform:scale(.92)}
 .h2-ref.spin{animation:h2spin .8s linear infinite}
 @keyframes h2spin{to{transform:rotate(360deg)}}
+
+/*QISAS-TOAST*/
+.toast{z-index:100000!important;bottom:calc(112px + env(safe-area-inset-bottom))!important}

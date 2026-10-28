@@ -617,7 +617,7 @@ document.addEventListener('click', e => {
   switch (act) {
     case 'back': history.length > 1 ? history.back() : (location.hash = '#/'); break;
     case 'go': location.hash = el.dataset.to; break;
-    case 'update': applyUpdate(true); break;
+    case 'update': checkUpdate(true); break;
     case 'apply-update': applyUpdate(); break;
     case 'pl-toggle': Reader.toggle(); break;
     case 'pl-next': Reader.next(); break;
@@ -695,12 +695,12 @@ async function checkUpdate(manual) {
     if (j.version && j.version !== VERSION) {
       $('#upd').hidden = false; if (!Reader.playing && !sessionStorage.getItem("qa")) { sessionStorage.setItem("qa","1"); setTimeout(applyUpdate, 1500); }
       $('#upd').dataset.ver = j.version;
-      if (manual) toast('يوجد تحديث جديد' + (j.notes ? ': ' + j.notes : ''), 4000);
+      if (manual) { toast('⬇️ جاري تنزيل التحديث الجديد…', 5000); setTimeout(() => applyUpdate(true), 700); }
       return true;
     }
-    if (manual) toast('أنت تستخدم أحدث إصدار ✓');
+    if (manual) toast('✓ أنت على أحدث إصدار (' + VERSION + ')', 3500);
   } catch {
-    if (manual) toast('تعذر التحقق — تأكد من اتصال الإنترنت');
+    if (manual) toast('⚠️ تعذر التحقق — تأكد من الإنترنت', 3500);
   } finally {
     if (manual) setTimeout(() => btns.forEach(b => b.classList.remove('spin')), 500);
   }
