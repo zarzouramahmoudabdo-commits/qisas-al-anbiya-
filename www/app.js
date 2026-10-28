@@ -617,7 +617,7 @@ document.addEventListener('click', e => {
   switch (act) {
     case 'back': history.length > 1 ? history.back() : (location.hash = '#/'); break;
     case 'go': location.hash = el.dataset.to; break;
-    case 'update': checkUpdate(true); break;
+    case 'update': applyUpdate(true); break;
     case 'apply-update': applyUpdate(); break;
     case 'pl-toggle': Reader.toggle(); break;
     case 'pl-next': Reader.next(); break;
@@ -706,11 +706,12 @@ async function checkUpdate(manual) {
   }
   return false;
 }
-async function applyUpdate() {
-  toast('جاري التحديث…', 5000);
+async function applyUpdate(manual) {
+  if (manual) $$('[data-act="update"]').forEach(b => b.classList.add('spin'));
+  toast('جاري التحديث…', 8000);
   Reader.stop();
-  try { const reg = await navigator.serviceWorker?.getRegistration(); await reg?.update(); } catch {}
   try { const keys = await caches.keys(); await Promise.all(keys.map(k => caches.delete(k))); } catch {}
+  try { const regs = await navigator.serviceWorker?.getRegistrations(); if (regs) await Promise.all(regs.map(r => r.unregister())); } catch {}
   location.reload();
 }
 

@@ -60,4 +60,4 @@ body{background-image:radial-gradient(120% 60% at 100% 0,color-mix(in srgb,var(-
 .x-colors label span{font-size:16px;color:#fff;text-shadow:0 1px 3px #000a;pointer-events:none}
 
 /* إخفاء زر التحديث العلوي — التحديث من بطاقة الرئيسية */
-#top [data-act="update"]{display:none!important}
+
