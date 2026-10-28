@@ -199,3 +199,14 @@ body #nav a.new .pn-i::after{content:"";position:absolute;top:8px;inset-inline-s
 .h2-resume.start .h2-ring{border-radius:50%;background:color-mix(in srgb,var(--gold) 16%,transparent)}
 .h2-resume.start .h2-ring i{display:grid;place-items:center}
 #app.p2 .sec-cards{display:none}
+
+/* سلاسة الإغلاق والانتقالات */
+#p-modal{transition:background .22s}
+#p-modal.sheet.closing{background:transparent}
+#p-modal.sheet.closing .p-card{transform:translateY(105%);transition:transform .24s ease;animation:none}
+.p-card{overscroll-behavior:contain;touch-action:pan-y}
+#app.p-in{animation:pIn .24s cubic-bezier(.22,.8,.24,1) both}
+@keyframes pIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+html{scroll-behavior:auto}
+a,button{-webkit-touch-callout:none}
+#p-modal.sheet{animation:pFade .2s}@keyframes pFade{from{background:transparent}}

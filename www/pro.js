@@ -107,13 +107,35 @@ function readPanel() {
 
 /* ───── نافذة عامة ───── */
 function modal(html) {
-  closeModal();
+  closeModal(true);
   const m = document.createElement('div'); m.id = 'p-modal';
   m.innerHTML = `<div class="p-card">${html}</div>`;
   m.addEventListener('click', e => { if (e.target === m) closeModal(); });
   document.body.appendChild(m); return m;
 }
-function closeModal() { const m = $('#p-modal'); if (m) m.remove(); }
+function closeModal(instant) {
+  const m = $('#p-modal'); if (!m) return;
+  if (instant || !m.classList.contains('sheet') || m.classList.contains('closing')) { m.remove(); return; }
+  m.classList.add('closing'); setTimeout(() => m.remove(), 240);
+}
+/* سحب القائمة للأسفل لإغلاقها */
+function dragClose(m) {
+  const card = $('.p-card', m); let y0 = 0, dy = 0, t0 = 0, on = false;
+  card.addEventListener('touchstart', e => { if (card.scrollTop > 0) { on = false; return; } on = true; y0 = e.touches[0].clientY; dy = 0; t0 = Date.now(); card.style.animation = 'none'; card.style.transition = 'none'; }, { passive: true });
+  card.addEventListener('touchmove', e => {
+    if (!on) return; dy = e.touches[0].clientY - y0;
+    if (dy <= 0) { card.style.transform = ''; return; }
+    if (e.cancelable) e.preventDefault();
+    card.style.transform = `translateY(${dy}px)`; m.style.background = `rgba(0,0,0,${Math.max(0, .66 - dy / 700)})`;
+  }, { passive: false });
+  const end = () => {
+    if (!on) return; on = false;
+    const v = dy / Math.max(1, Date.now() - t0);
+    if (dy > 90 || (dy > 30 && v > .6)) { card.style.transition = 'transform .22s ease'; card.style.transform = 'translateY(105%)'; m.style.transition = 'background .22s'; m.style.background = 'transparent'; setTimeout(() => m.remove(), 230); }
+    else { card.style.transition = 'transform .25s cubic-bezier(.2,.8,.2,1)'; card.style.transform = ''; m.style.background = ''; }
+  };
+  card.addEventListener('touchend', end); card.addEventListener('touchcancel', end);
+}
 
 /* ───── أزرار عائمة ───── */
 function fabs() {
@@ -464,7 +486,7 @@ function moreSheet() {
       ${row('#/p/dl', 'dl', 'التنزيلات', 'للعمل بدون إنترنت')}${row('', 'aa', 'وضع القراءة', 'الخط والخلفية والتباعد', 'data-p="read2"')}</div>
     <div class="ms-g"><h4>التطبيق</h4>
       ${row('#/settings', 'gear', 'الإعدادات', 'المظهر واللون وحجم الخط')}${row('', 'dl', 'تحديث التطبيق', hasNew ? 'يتوفر إصدار جديد — اضغط للتثبيت' : 'التحقق من آخر إصدار', 'data-p="apk"' + (hasNew ? ' data-new="1"' : ''))}</div>`);
-  m.classList.add('sheet');
+  m.classList.add('sheet'); dragClose(m);
   m.addEventListener('click', e => { if (e.target.closest('a.ms-row[href]')) setTimeout(closeModal, 0); });
 }
 
