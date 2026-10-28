@@ -61,3 +61,5 @@ body{background-image:radial-gradient(120% 60% at 100% 0,color-mix(in srgb,var(-
 
 /* إخفاء زر التحديث العلوي — التحديث من بطاقة الرئيسية */
 
+
+#top [data-act="update"]{display:none!important}

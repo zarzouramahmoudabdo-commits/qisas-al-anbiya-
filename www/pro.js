@@ -424,7 +424,7 @@ function homeBlock() {
   const prog = ls.get('tamy_progress', {}), stories = cnt('seerah') + cnt('prophets');
   const done = Object.keys(prog).filter(k => prog[k] && prog[k].done).length, seen = Object.keys(ls.get('p_seen', {})).length;
   wrap.innerHTML = `
-  <header class="h2-hero"><div class="arch" aria-hidden="true"></div>
+  <header class="h2-hero"><div class="arch" aria-hidden="true"></div><button class="h2-ref" data-act="update" aria-label="تحديث التطبيق" title="تحديث">🔄</button>
     <div class="date">${esc(greet())}</div>
     <h1>قصص الأنبياء</h1>
     <p>اقرأ سيرة النبي ﷺ وسير الأنبياء، وتعلّم من الأحاديث والتاريخ والأنساب.</p>
