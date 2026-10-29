@@ -47,7 +47,7 @@ async function sync() {
 const HREFS = { '#/x/hadith': 'hadith', '#/x/history': 'history', '#/x/nasab': 'nasab', '#/seerah': 'stories', '#/prophets': 'stories' };
 function badges(root) {
   const ch = changed();
-  $$('.h2-tile[href],.ms-row[href]', root).forEach(a => {
+  $$('.h2-tile[href],.ms-row[href],.st-card[href]', root).forEach(a => {
     const g = HREFS[a.getAttribute('href')]; if (!g) return;
     const has = a.querySelector('.lv-new');
     if (ch.includes(g) && !has) { const s = document.createElement('span'); s.className = 'lv-new'; s.textContent = 'جديد'; a.appendChild(s); }

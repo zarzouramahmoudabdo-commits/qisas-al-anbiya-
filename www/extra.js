@@ -1,5 +1,5 @@
 /* ترقية الاحتراف: يُحمَّل أولًا لتقليل ومضة الواجهة القديمة */
-(() => { try { var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'pro.css'; document.head.appendChild(l); var s = document.createElement('script'); s.src = 'pro.js'; document.head.appendChild(s); } catch (e) {} })();
+(() => { try { var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'pro.css'; document.head.appendChild(l); var s = document.createElement('script'); s.src = 'pro.js'; document.head.appendChild(s); var l2 = document.createElement('link'); l2.rel = 'stylesheet'; l2.href = 'stage.css'; document.head.appendChild(l2); var s2 = document.createElement('script'); s2.src = 'stage.js'; document.head.appendChild(s2); } catch (e) {} })();
 /* أقسام إضافية: أنساب الأنبياء، التاريخ الإسلامي، الأحاديث النبوية
    وحدة مستقلة تُحمَّل بعد app.js ولا تغيّر منطقه. المسارات: #/x/nasab  #/x/history  #/x/hadith */
 (() => {
