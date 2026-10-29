@@ -76,3 +76,16 @@ const app = document.getElementById('app');
 if (app) { new MutationObserver(scan).observe(app, { childList: true, subtree: true }); }
 scan();
 })();
+
+/*QISAS-NAVSYNC*/
+(() => {
+  const key = () => { const s = (location.hash || '#/').replace(/^#\/?/, '').split('/'), p0 = s[0] || '', p1 = s[1] || '';
+    if (!p0 || p0 === 'search' || p0 === 'settings') return 'home';
+    if (p0 === 'seerah' || p0 === 'prophets' || p0 === 'favs') return p0;
+    if (p0 === 'item') return p1; return ''; };
+  const sync = () => { const k = key(); document.querySelectorAll('#nav a[data-n]').forEach(a => { if (a.dataset.n !== 'more') a.classList.toggle('on', !!k && a.dataset.n === k); }); };
+  window.addEventListener('hashchange', () => setTimeout(sync, 60));
+  const nav = document.getElementById('nav');
+  if (nav) new MutationObserver(() => setTimeout(sync, 0)).observe(nav, { childList: true });
+  setTimeout(sync, 300); setTimeout(sync, 1500);
+})();
